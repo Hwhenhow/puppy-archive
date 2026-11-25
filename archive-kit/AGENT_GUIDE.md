@@ -60,7 +60,7 @@
 
 网站没有账号。数据在用户浏览器本机，同时按“口令”在云端存一份。
 
-- 口令：**4 位数字**，由用户自己定（皮皮库里现在用的是 `2427`）。这是弱口令，等于用 1 万种可能保护一份数据，只能防手滑、不能防人；因此**不要把本页链接连同口令一起发给别人**，也不要写进公开的地方。
+- 口令：**4 位数字**，由用户自己定（这个口令不在文档里记录，需要时向用户本人确认）。这是弱口令，等于用 1 万种可能保护一份数据，只能防手滑、不能防人；因此**不要把本页链接连同口令一起发给别人**，也不要写进公开的地方。
 - 云端只存哈希：`code_hash = PBKDF2-SHA256(口令, salt='puppy-archive/v2', iterations=210000, 32 bytes)` 的 64 位十六进制。代码见网页 `hashCode()`，改算法会导致旧数据取不回来，不要动。
 - 云端表 `vault(code_hash, data JSONB, rev INT)`，应用 ID `wbapp_LJnw4qnrUtFug4M4UWBFGM`。表本身不可直接读写，只能通过两个函数：
   - `vault_get(p_hash)` 返回 `data, rev, updated_at`。
@@ -91,7 +91,7 @@ SELECT left(code_hash,16), rev, updated_at FROM public.vault
 
 ```js
 const { pbkdf2Sync } = require('node:crypto');
-pbkdf2Sync('2427', 'puppy-archive/v2', 210000, 32, 'sha256').toString('hex');
+pbkdf2Sync('<口令>', 'puppy-archive/v2', 210000, 32, 'sha256').toString('hex');
 ```
 
 ### 谁可以直接写，谁要进队列

@@ -560,7 +560,7 @@ function newCodePrompt(prefill){
     $('#ncCancel').onclick = () => close(null);
     $('#ncOk').onclick = async () => {
       const c = normCode(inp.value);
-      if (!validCode(c)) return ($('#newCodeMsg').textContent = '要 4 位数字，例如 2427');
+      if (!validCode(c)) return ($('#newCodeMsg').textContent = '要 4 位数字，例如 8351');
       const btn = $('#ncOk'); btn.disabled = true; $('#newCodeMsg').textContent = '正在检查这个口令是否已被占用…';
       try {
         if (cloud){

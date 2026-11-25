@@ -12,7 +12,7 @@
 |---|---|---|
 | `index.html` | 全部前端：样式、数据层、界面、交互（约 1500 行，分块注释） | 随便改 |
 | `sdk.js` | 第三方云 SDK（WorkBuddy 云 / Genie BaaS），压缩过 | **别改**，用不到可以直接删 |
-| `config.sample.js` | 云端配置模板，复制成 `config.js` 后填自己的值 | 填自己的 |
+| `config.js` | 云端连接参数，**默认全空** → 仅本机模式 | 填自己的值即开启同步 |
 | `init.sql` | 后端建表 + 两个函数 + RLS，一次执行完 | 按需改 |
 | `template.json` | 通用模板（技能树、字段分类、状态字典） | 随便改 |
 | `icon-*.png` / `icon.svg` | 应用图标 | 换成自己的 |
@@ -35,7 +35,7 @@ python3 -m http.server 8080
 
 | 模式 | 条件 | 行为 |
 |---|---|---|
-| 仅本机 | 没有 `config.js`，或里面值为空 | 建档案、编辑、导入导出全部正常；右上角显示「仅本机（云端不可用）」 |
+| 仅本机（默认） | `config.js` 里三项为空 | 建档案、编辑、导入导出全部正常；右上角显示「仅本机（云端不可用）」，不发任何网络请求 |
 | 云端同步 | `config.js` 指向一个已建好 `init.sql` 的后端 | 整库自动同步，换设备输 4 位口令即可找回 |
 | 只读演示 | 用别人的 `config.js` 但不带口令 | 停在启动页，看不到任何数据 |
 
@@ -128,8 +128,8 @@ vault(code_hash text primary key, data jsonb, rev int, created_at, updated_at)
 ### 6.1 直接用你的云应用（最省事）
 
 1. 在你的 WorkBuddy 云 / Supabase 项目里执行 `init.sql`。
-2. 把 `config.sample.js` 复制成 `config.js`，填 `endpoint` 和 `publishableKey`。
-3. 完事。
+2. 打开 `config.js`，填 `endpoint` 和 `publishableKey`（`oauthRelayBaseUrl` 不用管）。
+3. 完事，刷新页面右上角应变「待同步 / 已同步」。
 
 ### 6.2 换成任意后端（自建 API / Cloudflare / 自己的 Postgres）
 
