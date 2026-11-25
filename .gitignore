@@ -1,0 +1,11 @@
+# 系统与编辑器
+.DS_Store
+.workbuddy/
+*.genie
+
+# 真实档案数据：永远不入库，避免哪天推送到远端时泄露
+archive-kit/pipi.json
+archive-kit/mirror/
+
+# 构建产物
+*.zip

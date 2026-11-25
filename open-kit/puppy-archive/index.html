@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Puppy Archive</title>
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+<meta name="application-name" content="Puppy Archive">
+<meta name="apple-mobile-web-app-title" content="Puppy Archive">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f5f4f1">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#161513">
+<style>
+:root{
+  --bg:#f5f4f1;--card:#fff;--ink:#222;--sub:#76726b;--line:#e6e3dd;
+  --accent:#b4552d;--accent-soft:#f6e6dd;--ok:#3d7a4f;--warn:#b7791f;--bad:#b23a3a;--info:#3b6ea5;
+  --r:12px;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#161513;--card:#201f1c;--ink:#ece9e3;--sub:#9b968c;--line:#34322d;--accent:#e08a5f;--accent-soft:#3a2a21;--ok:#6fbf86;--warn:#e0b25a;--bad:#e27b7b;--info:#7fb0e6}
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+#app{max-width:720px;margin:0 auto;padding:0 14px calc(84px + env(safe-area-inset-bottom))}
+header.top{display:flex;align-items:center;gap:10px;padding:14px 2px 8px;position:sticky;top:0;background:var(--bg);z-index:5}
+header.top h1{font-size:18px;margin:0;flex:1}
+header.top select{max-width:46%}
+h2{font-size:15px;margin:20px 2px 8px;color:var(--sub);font-weight:600;letter-spacing:.04em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin-bottom:10px}
+.row{display:flex;gap:10px;align-items:flex-start}
+.row.c{align-items:center}
+.grow{flex:1;min-width:0}
+.sub{color:var(--sub);font-size:13px}
+.tiny{font-size:12px;color:var(--sub)}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:7px 13px;cursor:pointer}
+.btn.pri{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.sm{padding:3px 9px;font-size:13px;border-radius:8px}
+.btn.danger{color:var(--bad)}
+.btn:disabled{opacity:.5}
+input,select,textarea{width:100%;background:var(--card);border:1px solid var(--line);border-radius:9px;padding:8px 10px}
+textarea{min-height:84px;resize:vertical}
+label.f{display:block;margin:10px 0 3px;font-size:13px;color:var(--sub)}
+.tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:99px;border:1px solid var(--line);color:var(--sub);white-space:nowrap}
+.tag.stated{color:var(--ok);border-color:var(--ok)}
+.tag.observed{color:var(--info);border-color:var(--info)}
+.tag.inferred{color:var(--warn);border-color:var(--warn)}
+.tag.unverified{color:var(--bad);border-color:var(--bad)}
+.tag.lv{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+nav.bar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom);z-index:6}
+nav.bar .in{display:flex;width:100%;max-width:720px}
+nav.bar button{flex:1;border:0;background:none;padding:10px 0 9px;font-size:12px;color:var(--sub);cursor:pointer;position:relative}
+nav.bar button.on{color:var(--accent);font-weight:600}
+nav.bar button .n{position:absolute;top:4px;margin-left:2px;background:var(--bad);color:#fff;border-radius:99px;font-size:10px;padding:0 5px}
+.bar-out{height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar-out i{display:block;height:100%;background:var(--accent)}
+.st{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.st button{border:1px solid var(--line);background:none;border-radius:8px;padding:2px 9px;font-size:12px;cursor:pointer;color:var(--sub)}
+.st button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.st button.on.dropped{background:var(--sub);border-color:var(--sub)}
+.skill.dropped{opacity:.55}
+.bubble{max-width:82%;padding:6px 11px;border-radius:14px;margin:4px 0;white-space:pre-wrap;word-break:break-word}
+.bubble.dog{background:var(--accent-soft);border-bottom-left-radius:4px}
+.bubble.me{background:var(--line);margin-left:auto;border-bottom-right-radius:4px}
+.chat{display:flex;flex-direction:column}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.modal .sheet{background:var(--bg);width:100%;max-width:720px;max-height:92vh;overflow:auto;border-radius:16px 16px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom))}
+.modal h3{margin:0 0 4px}
+/* 对话框 / 菜单（替代浏览器原生弹窗） */
+#dlgRoot .modal{z-index:26;background:rgba(0,0,0,.42)}
+.dlg-body{margin:6px 0 0;font-size:14px;line-height:1.65;white-space:pre-wrap;word-break:break-word}
+.btn.solid-bad{background:var(--bad);border-color:var(--bad);color:#fff}
+.btn.solid-ok{background:var(--accent);border-color:var(--accent);color:#fff}
+.menu{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.menu button{display:flex;align-items:center;gap:11px;width:100%;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:12px 14px;font-size:15px;cursor:pointer}
+.menu button .ic{width:20px;flex:none;text-align:center;font-size:15px;opacity:.85}
+.menu button .mt{display:flex;flex-direction:column;gap:1px;min-width:0}
+.menu button .mt i{font-style:normal;font-size:12px;color:var(--sub)}
+.menu button.bad{color:var(--bad)}
+/* 手势卡片 */
+.gest{position:relative;overflow:hidden;border-radius:var(--r);border:1px solid var(--line);background:var(--card);margin-bottom:10px}
+.gest .g-act{position:absolute;top:0;right:0;bottom:0;display:flex;z-index:1}
+.gest .g-act button{width:72px;border:0;color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center;background:var(--sub);cursor:pointer}
+.gest .g-act button.warn{background:var(--warn)}
+.gest .g-act button.bad{background:var(--bad)}
+.gest .g-act button.ok{background:var(--ok)}
+.gest .g-in{position:relative;z-index:2;background:var(--card);padding:12px 14px;transition:transform .19s ease;-webkit-user-select:none;user-select:none;touch-action:pan-y}
+.gest.dragging .g-in{transition:none}
+.gest.open .g-in{box-shadow:-6px 0 14px rgba(0,0,0,.08)}
+.gest.pressing .g-in{background:var(--accent-soft)}
+.gest.plain{border:0;border-top:1px solid var(--line);border-radius:0;background:none;margin:0}
+.gest.plain:first-child{border-top:0}
+.gest.plain .g-in{background:var(--card);padding:9px 0}
+/* 长按拖动排序 */
+.gest .g-in{-webkit-touch-callout:none}
+.gest.drag-src{opacity:.32;border-style:dashed}
+.gest.drag-src .g-in{background:var(--accent-soft)}
+.drag-ghost{position:fixed;z-index:40;pointer-events:none;margin:0;background:var(--card);
+  box-shadow:0 14px 32px rgba(0,0,0,.22);will-change:transform}
+.drag-ghost .g-act{display:none}
+body.dragging-row{-webkit-user-select:none;user-select:none;cursor:grabbing}
+.hint{display:flex;align-items:center;gap:6px;margin:0 2px 9px;color:var(--sub);font-size:12px}
+.hint button{margin-left:auto;border:0;background:none;color:var(--sub);font-size:16px;line-height:1;padding:0 4px;cursor:pointer}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:90px;background:#222;color:#fff;padding:8px 16px;border-radius:99px;z-index:30;font-size:14px;max-width:90vw}
+.empty{text-align:center;color:var(--sub);padding:26px 0}
+.sec-h{display:flex;align-items:center;justify-content:space-between}
+.kv{display:flex;gap:8px;padding:7px 0;border-top:1px solid var(--line)}
+.kv:first-child{border-top:0}
+.kv .k{width:88px;flex:none;color:var(--sub);font-size:13px;padding-top:1px}
+.kv.old .v{text-decoration:line-through;color:var(--sub)}
+.checkbox{width:20px;height:20px;flex:none;margin-top:2px;accent-color:var(--accent)}
+.checks{display:flex;flex-wrap:wrap;gap:6px}
+.checks label{display:flex;align-items:center;gap:4px;border:1px solid var(--line);border-radius:8px;padding:3px 8px;font-size:13px;background:var(--card)}
+.checks input{width:auto}
+#login{max-width:420px;margin:0 auto;padding:12vh 18px 30px}
+#login h1{margin:0 0 4px}
+#login .logo{display:block;width:64px;height:64px;margin:0 0 10px}
+.err{color:var(--bad);font-size:13px;margin-top:8px;min-height:18px}
+pre.json{white-space:pre-wrap;word-break:break-all;font-size:12px;background:var(--card);border:1px solid var(--line);border-radius:9px;padding:8px;max-height:260px;overflow:auto}
+.hide{display:none!important}
+input.code{text-align:center;font-size:26px;letter-spacing:.42em;text-indent:.42em;font-family:ui-monospace,Menlo,monospace;font-weight:700;padding:10px 0}
+</style>
+</head>
+<body>
+
+<div id="login">
+  <img class="logo" src="icon-180.png" alt="Puppy Archive" width="64" height="64">
+  <h1>Puppy Archive</h1>
+  <p class="sub" id="lgStatus">正在加载…</p>
+  <div id="lgBody" class="hide">
+    <div class="card">
+      <b>口令</b>
+      <p class="sub" style="margin:6px 0 10px">4 位数字，自己定一个记得住的。没有账号、没有密码；换设备或清了浏览器数据，输入同一串数字就能找回全部档案。忘了就找不回来了。</p>
+      <input id="rcInput" class="code" type="tel" inputmode="numeric" maxlength="4" placeholder="4 位数字" autocomplete="off" autocorrect="off" spellcheck="false">
+      <div class="row" style="margin-top:10px">
+        <button class="btn pri grow" id="btnNew" type="button">新建档案库</button>
+        <button class="btn grow" id="btnRestore" type="button">找回档案</button>
+      </div>
+      <p class="sub" id="rcMsg" style="margin:8px 0 0"></p>
+    </div>
+    <div class="err" id="lgErr" style="white-space:pre-wrap;word-break:break-word"></div>
+  </div>
+</div>
+
+<div id="app" class="hide"></div>
+<div id="modalRoot"></div>
+<div id="dlgRoot"></div>
+
+<script>
+/* ===== 网络诊断：先于 SDK 安装，记录所有登录/数据请求，用于定位失败环节 ===== */
+window.__net = [];
+(function(){
+  const raw = window.fetch ? window.fetch.bind(window) : null;
+  if (!raw) return;
+  const cut = u => { const i = u.indexOf('?'); return i < 0 ? u : u.slice(0, i); };
+  const push = r => {
+    try {
+      window.__net.push(r);
+      if (window.__net.length > 12) window.__net.shift();
+      sessionStorage.setItem('__net', JSON.stringify(window.__net));
+    } catch (e) {}
+  };
+  window.fetch = async function(input, init){
+    const url = typeof input === 'string' ? input : (input && input.url) || '';
+    const isCloud = url.indexOf('/.cloud/') !== -1 || url.indexOf('genie-baas') !== -1;
+    const t0 = Date.now();
+    let resp;
+    try {
+      resp = await raw(input, init);
+    } catch (e) {
+      if (isCloud) push({ url: cut(url), status: 0, statusText: 'NETWORK', msg: String((e && e.message) || e) });
+      throw e;
+    }
+    if (isCloud){
+      const rec = { url: cut(url), status: resp.status, statusText: resp.statusText, ms: Date.now() - t0 };
+      try {
+        rec.rid = resp.headers.get('x-request-id');
+        rec.tid = resp.headers.get('x-trace-id');
+      } catch (e) {}
+      try {
+        const t = await resp.clone().text();
+        rec.body = t.slice(0, 200);
+      } catch (e) {}
+      push(rec);
+    }
+    return resp;
+  };
+  try {
+    const saved = sessionStorage.getItem('__net');
+    if (saved) window.__net = JSON.parse(saved);
+  } catch (e) {}
+})();
+</script>
+<script src="config.js"></script>
+<script src="sdk.js"></script>
+<script>
+/* ========== 配置 ==========
+   云端连接参数放在 config.js（window.PA_CONFIG），代码里不留密钥。
+   没有 config.js 或值为空时，应用自动以「仅本机」模式运行，功能照常、不同步。 */
+const publicConfig = window.PA_CONFIG || {};
+const cloudReady = !!(publicConfig.endpoint && publicConfig.publishableKey);
+
+/* ========== 通用模板（技能树 + 档案字段） ========== */
+const TEMPLATE = {
+  version: 1,
+  levels: { 1:'L1 基础', 2:'L2 进阶', 3:'L3 高控制', 4:'L4 深度' },
+  skills: [
+    {k:'l1_stop',   lv:1, name:'寸止叫停',       hint:'临界点叫停，不放行；先练节奏和听令'},
+    {k:'l1_reward', lv:1, name:'基础奖惩',       hint:'完成指令给放行/加速，失败给减速/暂停'},
+    {k:'l1_count',  lv:1, name:'报数',           hint:'按要求报数、报状态，用于校准控制'},
+    {k:'l1_address',lv:1, name:'称呼规则',       hint:'约定称呼与说话规则'},
+    {k:'l1_safe',   lv:1, name:'安全词与 Aftercare', hint:'安全词、叫停方式、事后安抚'},
+    {k:'l2_dice',   lv:2, name:'骰子 / 盲盒',    hint:'随机决定指令或结果，增加不可预测性'},
+    {k:'l2_shop',   lv:2, name:'积分商店与免罚券', hint:'表现换积分，积分换权益或免罚'},
+    {k:'l2_mute',   lv:2, name:'禁声',           hint:'限制发声，用其他方式回应'},
+    {k:'l2_freeze', lv:2, name:'冻结指令',       hint:'一声令下立刻停住不动'},
+    {k:'l2_temp',   lv:2, name:'温度与材质',     hint:'冷热、材质带来的不同感受'},
+    {k:'l3_blind',  lv:3, name:'蒙眼与黑暗',     hint:'感官剥夺，依赖声音指引'},
+    {k:'l3_overload',lv:3,name:'认知过载',       hint:'同时多条指令或计算任务，占满注意力'},
+    {k:'l3_light',  lv:3, name:'红绿灯自主计时', hint:'给出规则后由对方自己计时和自控'},
+    {k:'l3_nohand', lv:3, name:'禁止自己动手',   hint:'全程不得自行触碰，只能按指令'},
+    {k:'l3_mirror', lv:3, name:'镜面描述',       hint:'让对方描述自己当下的状态和样子'},
+    {k:'l3_role',   lv:3, name:'角色剧本',       hint:'带情节和身份设定的玩法'},
+    {k:'l4_fake',   lv:4, name:'虚晃一枪',       hint:'假装放行或假装结束，再收回'},
+    {k:'l4_blindend',lv:4,name:'盲盒终点',       hint:'终点结果随机，对方事先不知道'},
+    {k:'l4_candy',  lv:4, name:'糖果诱饵',       hint:'用奖励做诱饵引导犯错'},
+    {k:'l4_cross',  lv:4, name:'跨局剥夺',       hint:'跨多局不放行，延后释放'},
+    {k:'l4_raid',   lv:4, name:'日常突袭',       hint:'脱离固定时间突然开局或下指令'},
+    {k:'l4_tease',  lv:4, name:'预告不兑现',     hint:'先预告再按兵不动，制造期待'},
+    {k:'l4_cond',   lv:4, name:'条件反射词',     hint:'特定词语触发既定反应'},
+    {k:'l4_async',  lv:4, name:'异步指令',       hint:'不同时在线时留下指令，事后汇报'}
+  ],
+  factCategories: {
+    person: ['基础','学业与生活','作息与环境','声音与表达','偏好','雷区与禁忌','健康与安全','平台与联系'],
+    session: ['姿势动作','道具','节奏','局内反应']
+  },
+  confidence: { stated:'亲口说', observed:'观察到', inferred:'推测', unverified:'待确认' },
+  skillStatus: { untried:'未尝试', tried:'已尝试', mastered:'已掌握', dropped:'淘汰' }
+};
+const DIM = { person:'个人维度', session:'局内维度' };
+
+/* ========== 工具 ========== */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today = () => { const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+const nowISO = () => new Date().toISOString();
+function toast(msg){ const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2600); }
+
+let cloud = null;
+const S = { dogs:[], dog:null, facts:[], skills:[], sessions:[], events:[], pending:[], tab:'home', openSession:null, showOld:false, evFilter:'all', showCode:false, hintOff:false };
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+/* 任何错误都展开成人能读的文字，绝不出现 [object Object] */
+function errText(e){
+  if (e == null) return '未知错误';
+  if (typeof e === 'string') return e;
+  const parts = [];
+  const add = (k, v) => {
+    if (v === undefined || v === null || v === '' || v === 'null') return;
+    const s = typeof v === 'object' ? JSON.stringify(v) : String(v);
+    parts.push(k ? k + '：' + s : s);
+  };
+  add('', e.message || e.msg || e.error_description);
+  add('错误码', e.code || e.error);
+  add('详情', e.details);
+  add('提示', e.hint);
+  add('HTTP', e.status || e.statusCode);
+  add('追踪号', e.requestId || e.request_id);
+  if (parts.length) return parts.join('\n');
+  try { const j = JSON.stringify(e); if (j && j !== '{}') return j; } catch (x) {}
+  return String(e && e.name || '未知错误');
+}
+function netDiag(){
+  const list = (window.__net || []).slice(-3);
+  if (!list.length) return '';
+  const lines = list.map(r => {
+    const head = `${r.status || 'ERR'} ${r.statusText || ''}`.trim() + ' ' + r.url;
+    const meta = [r.rid ? 'rid=' + r.rid : '', r.ms ? r.ms + 'ms' : '', r.msg || ''].filter(Boolean).join(' ');
+    return '· ' + head + (meta ? '\n  ' + meta : '');
+  });
+  return '\n\n【请求诊断】\n' + lines.join('\n');
+}
+
+/* ========== 本机库：与云端同构的单个 JSON 文档 ========== */
+const LS_KEY = 'pa_store_v1';
+const COLS = {
+  dogs:['id','code','real_name','status','note','created_at','updated_at'],
+  facts:['id','dog_id','dimension','category','key','value','source','confidence','observed_on','session_id','superseded','note','sort','created_at','updated_at'],
+  dog_skills:['id','dog_id','skill_key','level','name','status','first_date','effect','quote','feasible','feasible_note','sort','created_at','updated_at'],
+  sessions:['id','dog_id','seq','session_date','type','format','env','duration_min','summary','chat','report','skills_used','sort','created_at','updated_at'],
+  events:['id','dog_id','session_id','kind','title','detail','event_date','due_date','done','done_at','source','sort','created_at','updated_at'],
+  pending:['id','dog_id','proposed_by','target_table','action','target_id','payload','reason','status','created_at','resolved_at'],
+  attachments:['id','dog_id','session_id','kind','name','storage_key','meta','created_at']
+};
+const DEFAULTS = {
+  dogs:{status:'active'}, facts:{dimension:'person',category:'basic',confidence:'stated',superseded:false},
+  dog_skills:{level:1,status:'untried'}, sessions:{type:'play'}, events:{kind:'event',done:false},
+  pending:{proposed_by:'agent',action:'insert',status:'open'}, attachments:{kind:'image'}
+};
+let STORE = null;   // { code, hash, rev, dirty, ver, syncedAt, db:{tables,seq} }
+let UPGRADING = false;   // 旧口令换成新口令时为 true，保留本机数据
+
+function emptyDB(){ const db = { tables:{}, seq:{} }; for (const t in COLS){ db.tables[t] = []; db.seq[t] = 0; } return db; }
+function normDB(db){
+  if (!db || typeof db !== 'object' || !db.tables) throw new Error('数据格式不对');
+  db.seq = db.seq || {};
+  for (const t in COLS){
+    db.tables[t] = db.tables[t] || [];
+    const mx = db.tables[t].reduce((m, r) => Math.max(m, Number(r.id) || 0), 0);
+    db.seq[t] = Math.max(Number(db.seq[t]) || 0, mx);
+  }
+  return db;
+}
+function loadStore(){
+  try { const s = JSON.parse(localStorage.getItem(LS_KEY) || 'null'); if (s && s.hash && s.db){ normDB(s.db); return s; } } catch (e) { console.error(e); }
+  return null;
+}
+function saveStore(){ try { localStorage.setItem(LS_KEY, JSON.stringify(STORE)); } catch (e) { toast('本机存储失败：' + errText(e)); } }
+function touch(){ STORE.dirty = true; STORE.ver = (STORE.ver || 0) + 1; saveStore(); setSync('pending'); scheduleSync(1500); }
+
+const clone = x => x === undefined ? x : JSON.parse(JSON.stringify(x));
+const cmp = (a, b) => (a == null && b == null) ? 0 : a == null ? 1 : b == null ? -1 : a < b ? -1 : a > b ? 1 : 0;
+function canon(v){   // 键排序后的稳定序列化，用来比较两份 JSON 是否相同
+  if (v === null || typeof v !== 'object') return JSON.stringify(v);
+  if (Array.isArray(v)) return '[' + v.map(canon).join(',') + ']';
+  return '{' + Object.keys(v).sort().map(k => JSON.stringify(k) + ':' + canon(v[k])).join(',') + '}';
+}
+
+/* 查询构造器：保留 select / insert / update / delete / eq / order 的写法，数据落在本机 */
+class Q {
+  constructor(t){ this.t = t; this.op = 'select'; this.f = []; this.ord = null; this.cols = null; this.pl = null; this.rows = false; }
+  select(c){ if (this.op === 'select') this.cols = c; else this.rows = true; return this; }
+  insert(p){ this.op = 'insert'; this.pl = p; return this; }
+  update(p){ this.op = 'update'; this.pl = p; return this; }
+  delete(){ this.op = 'delete'; return this; }
+  eq(k, v){ this.f.push([k, v]); return this; }
+  order(k, o){ this.ord = [k, !(o && o.ascending === false)]; return this; }
+  then(a, b){ return this.run().then(a, b); }
+  run(){
+    try { return Promise.resolve({ data: this.exec(), error: null }); }
+    catch (e) { return Promise.resolve({ data: null, error: { message: (e && e.message) || String(e) } }); }
+  }
+  match(r){ return this.f.every(([k, v]) => r[k] === v || (r[k] != null && String(r[k]) === String(v))); }
+  build(row){
+    const t = this.t, now = nowISO(), o = {};
+    for (const c of COLS[t]) o[c] = null;
+    Object.assign(o, DEFAULTS[t] || {});
+    for (const k of COLS[t]) if (k !== 'id' && row[k] !== undefined) o[k] = clone(row[k]);
+    o.id = ++STORE.db.seq[t];
+    if (!o.created_at) o.created_at = now;
+    if (COLS[t].includes('updated_at') && !row.updated_at) o.updated_at = now;
+    return o;
+  }
+  exec(){
+    const tbl = STORE.db.tables[this.t];
+    if (!tbl) throw new Error('未知表 ' + this.t);
+    if (this.op === 'select'){
+      let out = tbl.filter(r => this.match(r));
+      if (this.ord){ const [k, asc] = this.ord; out = out.slice().sort((a, b) => { let c = cmp(a[k], b[k]); if (c === 0) c = cmp(a.id, b.id); return asc ? c : -c; }); }
+      if (this.cols && this.cols !== '*'){ const list = this.cols.split(',').map(x => x.trim()); out = out.map(r => { const o = {}; list.forEach(k => o[k] = r[k]); return o; }); }
+      return clone(out);
+    }
+    if (this.op === 'insert'){
+      const made = (Array.isArray(this.pl) ? this.pl : [this.pl]).map(r => this.build(r));
+      tbl.push(...made); touch();
+      return this.rows ? clone(made) : null;
+    }
+    if (this.op === 'update'){
+      const hit = tbl.filter(r => this.match(r));
+      for (const r of hit){
+        for (const k of COLS[this.t]) if (k !== 'id' && this.pl[k] !== undefined) r[k] = clone(this.pl[k]);
+        if (COLS[this.t].includes('updated_at') && this.pl.updated_at === undefined) r.updated_at = nowISO();
+      }
+      touch(); return this.rows ? clone(hit) : null;
+    }
+    if (this.op === 'delete'){
+      STORE.db.tables[this.t] = tbl.filter(r => !this.match(r)); touch(); return null;
+    }
+  }
+}
+const T = name => new Q(name);
+async function must(p, label){
+  const { data, error } = await p;
+  if (error){
+    const txt = errText(error);
+    toast((label || '操作失败') + '：' + txt.split('\n')[0]);
+    const w = new Error((label ? label + '失败\n' : '') + txt); w.raw = error; throw w;
+  }
+  return data;
+}
+
+/* ========== 口令（4 位数字） ========== */
+const CODE_LEN = 4;
+const normCode = s => String(s || '').replace(/\D/g, '').slice(0, CODE_LEN);
+const validCode = c => new RegExp('^\\d{' + CODE_LEN + '}$').test(c);
+const formatCode = c => String(c || '');
+/* 4 位数字的取值空间很小，用 PBKDF2 拉高每次猜测的成本（不是为了加密强度，是为了让穷举变慢） */
+async function hashCode(code){
+  if (!(window.crypto && crypto.subtle)) throw new Error('当前浏览器环境不支持加密接口，请使用 https 地址打开');
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey('raw', enc.encode(code), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits(
+    { name:'PBKDF2', salt: enc.encode('puppy-archive/v2'), iterations: 210000, hash:'SHA-256' }, key, 256);
+  return [...new Uint8Array(bits)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+async function copyText(t){
+  try { await navigator.clipboard.writeText(t); }
+  catch (e) { const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (_) {} ta.remove(); }
+}
+
+/* ========== 云端同步（后台进行，界面永远不等它） ========== */
+const SYNC = { state:'idle', busy:false, again:false, pullAgain:false, timer:null, lastErr:'' };
+function syncLabel(){
+  return ({ ok:'已同步', syncing:'同步中…', pending:'待同步', fail:'未同步，稍后自动重试', off:'仅本机（云端不可用）' })[SYNC.state] || '';
+}
+function setSync(st){
+  SYNC.state = st;
+  document.querySelectorAll('[data-sync]').forEach(el => { el.textContent = syncLabel(); el.style.color = st === 'fail' ? 'var(--bad)' : ''; });
+}
+function scheduleSync(ms, opts){ clearTimeout(SYNC.timer); SYNC.timer = setTimeout(() => syncNow(opts || {}), ms); }
+
+async function rpcRetry(fn, args){
+  let last;
+  for (let i = 0; i < 3; i++){
+    let res;
+    try { res = await cloud.database.rpc(fn, args); }
+    catch (e) { last = e; await sleep(700 * (i + 1)); continue; }
+    const { data, error, status } = res || {};
+    if (!error) return data;
+    last = error;
+    const code = Number(error.code), st = Number(status);
+    const transient = !st || st >= 500 || (code >= 500 && code < 600);
+    if (!transient) break;
+    await sleep(700 * (i + 1));
+  }
+  const w = new Error(errText(last)); w.raw = last; throw w;
+}
+async function vaultGet(hash){
+  const rows = await rpcRetry('vault_get', { p_hash: hash });
+  return (rows && rows[0]) || null;
+}
+async function vaultPut(hash, db, base){
+  const rows = await rpcRetry('vault_put', { p_hash: hash, p_data: db, p_base_rev: base });
+  return rows && rows[0];
+}
+function backup(side, db){ try { localStorage.setItem('pa_backup', JSON.stringify({ at: nowISO(), side, db })); } catch (e) {} }
+async function adoptRemote(remote){
+  STORE.db = normDB(clone(remote.data)); STORE.rev = remote.rev; STORE.dirty = false; STORE.ver = (STORE.ver || 0) + 1; saveStore();
+  if (!$('#app').classList.contains('hide') && $('#modalRoot').innerHTML === ''){ await loadDogs(); toast('已从云端更新'); }
+}
+async function resolveConflict(remote){
+  const pick = await showMenu('同步冲突', [
+    { label:'用云端的版本', icon:'☁', hint:'本机未同步的修改会先备份，再丢弃', run: async () => { backup('local', STORE.db); await adoptRemote(remote); } },
+    { label:'用本机的版本', icon:'📱', hint:'覆盖云端，云端那份先备份在本机', run: async () => { backup('cloud', remote.data); await pushLocal(remote.rev); } }
+  ]);
+  if (pick && pick.run) return pick.run();
+  scheduleSync(15000);
+}
+async function pushLocal(base){
+  const v = STORE.ver, snap = canon(STORE.db);
+  const r = await vaultPut(STORE.hash, STORE.db, base);
+  if (r && r.ok){
+    STORE.rev = r.rev; if (STORE.ver === v) STORE.dirty = false; saveStore();
+    if (STORE.dirty) scheduleSync(300);
+    return;
+  }
+  const remote = await vaultGet(STORE.hash);
+  if (!remote) return pushLocal(0);
+  if (canon(remote.data) === snap){ STORE.rev = remote.rev; if (STORE.ver === v) STORE.dirty = false; saveStore(); return; }  // 上次响应丢了，其实已写入
+  if (remote.rev < base) return pushLocal(remote.rev);
+  await resolveConflict(remote);
+}
+async function syncNow(opts){
+  opts = opts || {};
+  if (!STORE) return;
+  if (!cloud){ setSync('off'); return; }
+  if (SYNC.busy){ SYNC.again = true; if (opts.pull) SYNC.pullAgain = true; return; }
+  SYNC.busy = true; setSync('syncing');
+  try {
+    if (opts.pull || STORE.rev === 0){
+      const remote = await vaultGet(STORE.hash);
+      if (!remote) await pushLocal(0);
+      else if (remote.rev > STORE.rev){ if (!STORE.dirty) await adoptRemote(remote); else await resolveConflict(remote); }
+      else if (remote.rev === STORE.rev){ if (STORE.dirty) await pushLocal(STORE.rev); }
+      else await pushLocal(remote.rev);
+    } else if (STORE.dirty){
+      await pushLocal(STORE.rev);
+    }
+    STORE.syncedAt = Date.now(); saveStore();
+    setSync(STORE.dirty ? 'pending' : 'ok');
+  } catch (e) {
+    SYNC.lastErr = errText(e); setSync('fail'); scheduleSync(20000);
+  } finally {
+    SYNC.busy = false;
+    if (SYNC.again){ const pl = SYNC.pullAgain; SYNC.again = false; SYNC.pullAgain = false; scheduleSync(400, { pull: pl }); }
+  }
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && STORE) scheduleSync(300, { pull: true }); });
+window.addEventListener('online', () => { if (STORE) scheduleSync(300, { pull: true }); });
+
+/* ========== 启动 ========== */
+function fail(msg){
+  const app = $('#app');
+  if (!app.classList.contains('hide')){
+    if (!app.innerHTML.trim()) showFatal(msg); else console.error(msg);
+    return;
+  }
+  $('#login').classList.remove('hide'); $('#lgBody').classList.remove('hide');
+  const st = $('#lgStatus'); if (st) st.classList.add('hide');
+  const err = $('#lgErr'); if (err) err.textContent = msg || '';
+}
+/* 出错时绝不留白屏：把原因画到页面上 */
+function showFatal(msg){
+  const app = $('#app');
+  $('#login').classList.add('hide'); app.classList.remove('hide');
+  app.innerHTML = `<div class="card" style="margin-top:36px">
+    <b>页面出错了</b>
+    <div class="sub" style="margin:8px 0;white-space:pre-wrap;word-break:break-word">${esc(msg || '未知错误')}</div>
+    <div class="row" style="margin-top:6px"><button class="btn pri grow" data-act="reload">刷新重试</button></div>
+    <p class="tiny" style="margin-top:10px">本机数据没有丢。如果反复出现，把这段文字发给我。</p>
+  </div>`;
+}
+window.addEventListener('error', e => { if (e && e.message) console.error(e.message); });
+window.addEventListener('unhandledrejection', e => { console.error(e && e.reason); });
+
+function showCodeModal(code, onDone, doneText){
+  const root = $('#modalRoot');
+  root.innerHTML = `<div class="modal"><div class="sheet">
+    <h3>你的口令</h3>
+    <p class="sub">就是这个 4 位数字，自己记住就行。换设备或清了浏览器数据，在启动页输入它就能找回全部档案。忘了就找不回来。</p>
+    <div class="card" id="rcShow" style="text-align:center;font-size:40px;letter-spacing:.24em;font-weight:700;font-family:ui-monospace,Menlo,monospace;user-select:all;padding:14px 0">${esc(formatCode(code))}</div>
+    <div class="row"><button class="btn pri grow" id="rcGo" type="button">${esc(doneText || '记住了，进入')}</button></div>
+    <p class="tiny" style="margin-top:10px">同步状态：<span data-sync>${esc(syncLabel())}</span>（显示“已同步”后，换设备才能用这个口令找回）</p>
+  </div></div>`;
+  let done = false;
+  const finish = () => { if (done) return; done = true; dropModal(); onDone && onDone(); };
+  pushLayer(finish, 'form');
+  $('#rcGo').onclick = () => { if (!closeLayerOf('form')) finish(); };
+}
+/* 新建：口令由用户自己定，留空则随机给一个 */
+function newCodePrompt(prefill){
+  return new Promise(resolve => {
+    const root = $('#modalRoot');
+    root.innerHTML = `<div class="modal"><div class="sheet">
+      <h3>设一个 4 位数字口令</h3>
+      <p class="sub">用它找回档案。自己记得住就行，别用生日、手机号后四位这类别人容易猜到的。</p>
+      <input class="code" id="newCode" type="tel" inputmode="numeric" maxlength="4" placeholder="4 位数字" value="${esc(prefill || '')}" autocomplete="off">
+      <p class="sub" id="newCodeMsg" style="margin:8px 0 0"></p>
+      <div class="row" style="margin-top:12px">
+        <button class="btn grow" id="ncCancel" type="button">取消</button>
+        <button class="btn pri grow" id="ncOk" type="button">确定</button>
+      </div>
+    </div></div>`;
+    const inp = $('#newCode'); if (!prefill) setTimeout(() => inp.focus(), 50);
+    let done = false;
+    const finish = v => { if (done) return; done = true; dropModal(); resolve(v); };
+    pushLayer(v => finish(v === undefined ? null : v), 'form');   // 系统返回 = 取消
+    const close = v => { if (!closeLayerOf('form', v)) finish(v); };
+    $('#ncCancel').onclick = () => close(null);
+    $('#ncOk').onclick = async () => {
+      const c = normCode(inp.value);
+      if (!validCode(c)) return ($('#newCodeMsg').textContent = '要 4 位数字，例如 2427');
+      const btn = $('#ncOk'); btn.disabled = true; $('#newCodeMsg').textContent = '正在检查这个口令是否已被占用…';
+      try {
+        if (cloud){
+          const probe = vaultGet(await hashCode(c)).catch(() => null);
+          const hits = await Promise.race([probe, sleep(2500).then(() => 'timeout')]);
+          if (hits && hits !== 'timeout' && hits.rev){ btn.disabled = false; $('#newCodeMsg').textContent = '这个口令已经有档案了，换一个，或者用“找回档案”进去。'; return; }
+        }
+      } catch (e) { /* 云端暂时不通也允许继续，本机先记下，同步会重试 */ }
+      close(c);
+    };
+  });
+}
+function wireStart(){
+  $('#rcInput').addEventListener('input', e => { e.target.value = normCode(e.target.value); });
+  $('#btnNew').onclick = async () => {
+    try {
+      const pre = normCode($('#rcInput').value);
+      const code = await newCodePrompt(validCode(pre) ? pre : '');
+      if (!code) return;
+      const hash = await hashCode(code);
+      const keep = UPGRADING && STORE && STORE.db && Object.values(STORE.db.tables).some(a => a.length);   // 旧口令升级：留着本机数据
+      STORE = { code, hash, rev:0, dirty:true, ver:1, syncedAt:0, db:keep ? STORE.db : emptyDB() };
+      UPGRADING = false;
+      saveStore(); setSync(cloud ? 'pending' : 'off');
+      showCodeModal(code, () => enterApp());
+      scheduleSync(100);
+    } catch (e) { fail('新建失败：' + errText(e)); }
+  };
+  $('#btnRestore').onclick = async () => {
+    const msg = $('#rcMsg'), btn = $('#btnRestore'); $('#lgErr').textContent = '';
+    const c = normCode($('#rcInput').value);
+    if (!validCode(c)) return fail('请输入 4 位数字口令');
+    if (!cloud) return fail('云端组件没有加载成功，请刷新页面后重试');
+    btn.disabled = true; msg.textContent = '正在向云端查找（云端偶尔较慢，最多约 30 秒）…';
+    try {
+      const hash = await hashCode(c), remote = await vaultGet(hash);
+      if (!remote){ msg.textContent = ''; return fail('没有找到这个口令对应的档案，请检查数字是否输错。'); }
+      STORE = { code:c, hash, rev:remote.rev, dirty:false, ver:1, syncedAt:Date.now(), db:normDB(clone(remote.data)) };
+      saveStore(); msg.textContent = ''; setSync('ok');
+      await enterApp();
+    } catch (e) { msg.textContent = ''; fail('找回失败：' + errText(e) + netDiag()); }
+    finally { btn.disabled = false; }
+  };
+}
+async function boot(){
+  try { if (cloudReady && typeof WorkBuddyCloud !== 'undefined') cloud = WorkBuddyCloud.createWorkBuddyCloud(publicConfig); }
+  catch (e) { console.error(e); cloud = null; }
+  bindGestures();
+  wireStart();
+  try {   // 清掉旧版登录回调留下的参数
+    const u = new URL(location.href); let ch = false;
+    for (const k of ['code','state','provider','error']) if (u.searchParams.has(k)){ u.searchParams.delete(k); ch = true; }
+    if (ch) history.replaceState(null, '', u.pathname + u.search + u.hash);
+  } catch (e) {}
+  STORE = loadStore();
+  if (!STORE){ $('#lgStatus').classList.add('hide'); $('#lgBody').classList.remove('hide'); return; }
+  if (!validCode(STORE.code)){ upgradeCode(); return; }   // 旧格式：先换口令，不丢数据
+  setSync(!cloud ? 'off' : STORE.dirty ? 'pending' : 'ok');
+  await enterApp();
+  scheduleSync(200, { pull: true });
+}
+/* 旧版是 16 位恢复码，现在统一成 4 位数字：数据不动，只换钥匙 */
+function upgradeCode(){
+  const old = STORE.code;
+  UPGRADING = true;
+  $('#lgStatus').classList.add('hide'); $('#lgBody').classList.remove('hide');
+  $('#lgErr').textContent = '这台设备上还是旧口令「' + old + '」。点“新建档案库”设一个 4 位数字口令，本机档案不会丢，会接到新口令下。';
+}
+async function enterApp(){
+  $('#login').classList.add('hide'); $('#app').classList.remove('hide');
+  S.hintOff = localStorage.getItem('pa_hint_off') === '1';
+  try { await loadDogs(); } catch (err) { showFatal(errText(err)); }
+}
+
+/* ========== 数据加载 ========== */
+async function loadDogs(){
+  S.dogs = await must(T('dogs').select('*').order('created_at',{ascending:true}), '读取小狗');
+  if (!S.dogs.length){ S.dog = null; return render(); }
+  const saved = Number(localStorage.getItem('dogId'));
+  S.dog = S.dogs.find(d => d.id === saved) || S.dogs[0];
+  await loadAll();
+}
+/* 用户手动调整过的顺序（sort）优先，其余保持查询顺序（sort 为稳定排序，不会打乱默认次序） */
+const applySort = list => list.slice().sort((a, b) => (a.sort == null ? 1e9 : a.sort) - (b.sort == null ? 1e9 : b.sort));
+async function loadAll(){
+  const id = S.dog.id;
+  const [factsQ, skillsQ, sessionsQ, eventsQ, pending] = await Promise.all([
+    must(T('facts').select('*').eq('dog_id',id).order('created_at',{ascending:true}), '读取个人信息'),
+    must(T('dog_skills').select('*').eq('dog_id',id), '读取技能'),
+    must(T('sessions').select('id,dog_id,seq,session_date,type,format,env,duration_min,summary,skills_used,report,sort,created_at,updated_at').eq('dog_id',id).order('session_date',{ascending:false}), '读取局记录'),
+    must(T('events').select('*').eq('dog_id',id).order('created_at',{ascending:false}), '读取事件'),
+    must(T('pending').select('*').eq('dog_id',id).order('created_at',{ascending:false}), '读取待确认')
+  ]);
+  Object.assign(S, { facts:applySort(factsQ), skills:applySort(skillsQ), sessions:applySort(sessionsQ), events:applySort(eventsQ), pending });
+  render();
+}
+
+/* ========== 新建小狗（按模板初始化） ========== */
+async function createDog(vals){
+  const rows = await must(T('dogs').insert({ code: vals.code, real_name: vals.real_name || null, note: vals.note || null }).select(), '新建小狗');
+  const dog = rows[0];
+  await must(T('dog_skills').insert(TEMPLATE.skills.map(s => ({ dog_id: dog.id, skill_key: s.k, level: s.lv, name: s.name }))), '初始化技能树');
+  localStorage.setItem('dogId', dog.id);
+  toast('已按模板建档');
+  await loadDogs();
+}
+
+/* ========== 表单弹窗 ========== */
+function openForm({ title, fields, initial = {}, submitText = '保存', onSubmit, extra = '' }){
+  const root = $('#modalRoot');
+  const val = k => initial[k] ?? '';
+  const html = fields.map(f => {
+    const v = val(f.k);
+    let input;
+    if (f.type === 'textarea') input = `<textarea name="${f.k}" ${f.ph?`placeholder="${esc(f.ph)}"`:''} style="min-height:${f.h||84}px">${esc(v)}</textarea>`;
+    else if (f.type === 'select') input = `<select name="${f.k}">${f.options.map(o => `<option value="${esc(o[0])}" ${String(o[0])===String(v)?'selected':''}>${esc(o[1])}</option>`).join('')}</select>`;
+    else if (f.type === 'checks'){
+      const set = new Set(Array.isArray(v) ? v : []);
+      input = `<div class="checks">${f.options.map(o => `<label><input type="checkbox" name="${f.k}" value="${esc(o[0])}" ${set.has(o[0])?'checked':''}>${esc(o[1])}</label>`).join('')}</div>`;
+    } else {
+      const lid = f.list ? `list-${f.k}` : '';
+      input = `<input name="${f.k}" type="${f.type||'text'}" value="${esc(v)}" ${f.ph?`placeholder="${esc(f.ph)}"`:''} ${lid?`list="${lid}"`:''}>` +
+        (f.list ? `<datalist id="${lid}">${f.list.map(x=>`<option value="${esc(x)}">`).join('')}</datalist>` : '');
+    }
+    return `<label class="f">${esc(f.label)}</label>${input}`;
+  }).join('');
+  root.innerHTML = `<div class="modal"><form class="sheet"><h3>${esc(title)}</h3>${extra}${html}
+    <div class="row" style="margin-top:16px"><button type="button" class="btn grow" data-close>取消</button><button class="btn pri grow">${esc(submitText)}</button></div></form></div>`;
+  const form = root.querySelector('form');
+  pushLayer(() => dropModal(), 'form');     // 系统返回也能关掉表单
+  root.querySelector('[data-close]').onclick = closeModal;
+  root.querySelector('.modal').onclick = e => { if (e.target.classList.contains('modal')) closeModal(); };
+  form.onsubmit = async e => {
+    e.preventDefault();
+    const out = {};
+    for (const f of fields){
+      if (f.type === 'checks') out[f.k] = [...form.querySelectorAll(`input[name="${f.k}"]:checked`)].map(i => i.value);
+      else out[f.k] = form.elements[f.k].value.trim();
+    }
+    try { await onSubmit(out); closeModal(); } catch (_) { /* 已提示 */ }
+  };
+}
+/* 表单弹窗：只清 DOM；关栈交给下面的 closeModal */
+function dropModal(){ const r = $('#modalRoot'); if (r) r.innerHTML = ''; }
+function closeModal(){
+  while (LAYERS.length && LAYERS[LAYERS.length - 1].kind === 'dlg') popLayer();
+  if (!closeLayerOf('form')) dropModal();
+}
+/* ========== 返回键：弹窗 / 详情压一层 history，系统返回先关它们 ========== */
+const LAYERS = [];
+let selfPop = 0;
+function pushLayer(close, kind){
+  LAYERS.push({ close, kind });
+  try { history.pushState({ paLayer: LAYERS.length }, '', location.href); } catch (_) {}
+}
+/* 界面自己关掉时：先退掉这层 history，再执行真正的关闭 */
+function popLayer(value){
+  const l = LAYERS.pop();
+  if (!l) return false;
+  selfPop++;
+  try { history.back(); } catch (_) {}
+  try { l.close(value); } catch (err) { console.error(err); }
+  return true;
+}
+/* 只在栈顶正好是这一类界面时才退栈，避免把别的层一起关掉 */
+function closeLayerOf(kind, value){
+  const top = LAYERS[LAYERS.length - 1];
+  if (top && top.kind === kind) return popLayer(value);
+  return false;
+}
+function dropSessionLayer(){
+  while (LAYERS.length && LAYERS[LAYERS.length - 1].kind === 'session') popLayer();
+}
+/* 关掉某一局的详情，回到局列表 */
+function closeSessionView(){ S.openSession = null; S.tab = 'sessions'; render(); }
+window.addEventListener('popstate', () => {
+  if (selfPop){ selfPop--; return; }
+  const l = LAYERS.pop();
+  if (l){ try { l.close(undefined); } catch (err) { console.error(err); } }
+});
+/* ========== 对话框 / 底部菜单（替代浏览器原生弹窗） ========== */
+function closeDlg(){ const r = $('#dlgRoot'); if (r) r.innerHTML = ''; }
+function dlgOpen(html){
+  const r = $('#dlgRoot');
+  r.innerHTML = `<div class="modal"><div class="sheet">${html}</div></div>`;
+  return r;
+}
+function confirmBox(msg, opts){
+  opts = opts || {};
+  return new Promise(resolve => {
+    const t0 = Date.now();
+    const r = dlgOpen(`<h3>${esc(opts.title || '确认')}</h3><div class="dlg-body">${esc(msg)}</div>
+      <div class="row" style="margin-top:18px"><button class="btn grow" data-no>${esc(opts.cancel || '取消')}</button>
+      <button class="btn grow ${opts.soft ? 'solid-ok' : 'solid-bad'}" data-yes>${esc(opts.ok || '确定')}</button></div>`);
+    let done = false;
+    const fin = v => { if (done) return; done = true; closeDlg(); resolve(v); };
+    pushLayer(v => fin(v === undefined ? false : v), 'dlg');   // 系统返回 = 取消
+    const pick = v => { if (Date.now() - t0 < 260) return; if (!closeLayerOf('dlg', v)) fin(v); };
+    r.querySelector('[data-yes]').onclick = () => pick(true);
+    r.querySelector('[data-no]').onclick = () => pick(false);
+    r.querySelector('.modal').onclick = e => { if (e.target.classList.contains('modal')) pick(false); };
+  });
+}
+function showMenu(title, items){
+  return new Promise(resolve => {
+    const t0 = Date.now();
+    const r = dlgOpen(`<h3>${esc(title)}</h3><div class="menu">${items.map((it, i) =>
+      `<button data-i="${i}" class="${it.cls || ''}"><span class="ic">${it.icon || ''}</span><span class="mt">${esc(it.label)}${it.hint ? `<i>${esc(it.hint)}</i>` : ''}</span></button>`).join('')}</div>
+      <div style="height:10px"></div><button class="btn" style="width:100%" data-no>取消</button>`);
+    let done = false;
+    const fin = v => { if (done) return; done = true; closeDlg(); resolve(v); };
+    pushLayer(v => fin(v === undefined ? null : v), 'dlg');   // 系统返回 = 关掉
+    const pick = v => { if (Date.now() - t0 < 260) return; if (!closeLayerOf('dlg', v)) fin(v); };
+    r.querySelectorAll('[data-i]').forEach(b => b.onclick = () => pick(items[Number(b.dataset.i)]));
+    r.querySelector('[data-no]').onclick = () => pick(null);
+    r.querySelector('.modal').onclick = e => { if (e.target.classList.contains('modal')) pick(null); };
+  });
+}
+
+/* ========== 左滑操作 / 长按拖动排序 ========== */
+const GEST = { el:null, pid:null, x0:0, y0:0, dx:0, base:0, axis:'', timer:0, suppress:0 };
+const DRAG = { on:false, g:null, ghost:null, y0:0, grp:'' };
+const swipeWidth = g => { const a = g.querySelector('.g-act'); return a ? a.offsetWidth : 0; };
+function closeSwipe(except){
+  document.querySelectorAll('.gest.open').forEach(g => {
+    if (g === except) return;
+    g.classList.remove('open');
+    const inner = g.querySelector('.g-in'); if (inner) inner.style.transform = '';
+  });
+}
+/* 同组 = 同一分类下的这些行，只有同组之间可以换位置 */
+const dragGroup = grp => Array.from(document.querySelectorAll('.gest[data-grp]'))
+  .filter(el => el.dataset.grp === grp && !el.classList.contains('drag-ghost'));
+
+function startDrag(g, y){
+  if (DRAG.on || !g.dataset.grp) return;
+  closeSwipe();
+  const rect = g.getBoundingClientRect();
+  const ghost = g.cloneNode(true);
+  ghost.className = 'gest drag-ghost' + (g.classList.contains('plain') ? ' plain' : '');
+  ghost.removeAttribute('data-grp');
+  ghost.style.width = rect.width + 'px';
+  ghost.style.left = rect.left + 'px';
+  ghost.style.top = rect.top + 'px';
+  document.body.appendChild(ghost);
+  g.classList.add('drag-src');
+  DRAG.on = true; DRAG.g = g; DRAG.ghost = ghost; DRAG.y0 = y; DRAG.grp = g.dataset.grp;
+  document.body.classList.add('dragging-row');
+  try { if (navigator.vibrate) navigator.vibrate(12); } catch (_) {}
+}
+function dragMove(y){
+  if (!DRAG.on) return;
+  DRAG.ghost.style.transform = `translateY(${y - DRAG.y0}px)`;
+  const edge = 68;                                  // 靠近上下边缘时自己滚
+  if (y < edge) window.scrollBy(0, -14);
+  else if (y > window.innerHeight - edge) window.scrollBy(0, 14);
+  const g = DRAG.g, list = dragGroup(DRAG.grp).filter(el => el !== g);
+  if (!list.length) return;
+  let ref = null;
+  for (const el of list){
+    const r = el.getBoundingClientRect();
+    if (y < r.top + r.height * 0.55){ ref = el; break; }
+  }
+  if (ref){ if (g.nextElementSibling !== ref) g.parentElement.insertBefore(g, ref); }
+  else {
+    const last = list[list.length - 1];
+    if (g.previousElementSibling !== last) last.parentElement.insertBefore(g, last.nextSibling);
+  }
+}
+async function endDrag(){
+  if (!DRAG.on) return;
+  const g = DRAG.g;
+  DRAG.on = false;
+  if (DRAG.ghost) DRAG.ghost.remove();
+  DRAG.ghost = null;
+  g.classList.remove('drag-src');
+  document.body.classList.remove('dragging-row');
+  GEST.suppress = Date.now();
+  const table = { fact:'facts', event:'events', session:'sessions', skill:'dog_skills' }[g.dataset.g];
+  const ids = dragGroup(DRAG.grp).map(el => Number(el.dataset.gid)).filter(n => n);
+  if (!table || ids.length < 2) return;
+  try { await commitOrder(table, ids); } catch (err) { console.error(err); }
+}
+function bindGestures(){
+  document.addEventListener('pointerdown', e => {
+    if (e.button > 0 || DRAG.on) return;
+    const g = e.target.closest('.gest');
+    if (!g){ clearTimeout(GEST.timer); GEST.el = null; closeSwipe(); return; }
+    if (e.target.closest('button,input,select,textarea,label,a')) return;
+    closeSwipe(g);
+    GEST.el = g; GEST.pid = e.pointerId; GEST.x0 = e.clientX; GEST.y0 = e.clientY; GEST.dx = 0; GEST.axis = '';
+    GEST.base = g.classList.contains('open') ? -swipeWidth(g) : 0;
+    clearTimeout(GEST.timer);
+    /* 按住 420ms 不动：卡片被“拿起来”，接着上下拖就是排序 */
+    GEST.timer = setTimeout(() => {
+      if (GEST.el !== g || GEST.axis) return;
+      GEST.el = null;
+      g.classList.add('pressing'); setTimeout(() => g.classList.remove('pressing'), 160);
+      startDrag(g, GEST.y0);
+    }, 420);
+  });
+  document.addEventListener('pointermove', e => {
+    if (DRAG.on){ dragMove(e.clientY); return; }
+    const g = GEST.el;
+    if (!g || e.pointerId !== GEST.pid) return;
+    const dx = e.clientX - GEST.x0, dy = e.clientY - GEST.y0;
+    if (!GEST.axis){
+      if (Math.abs(dx) > 9 && Math.abs(dx) > Math.abs(dy) * 1.15){ GEST.axis = 'x'; clearTimeout(GEST.timer); g.classList.add('dragging'); }
+      else if (Math.abs(dy) > 12){ clearTimeout(GEST.timer); GEST.axis = 'y'; GEST.el = null; return; }
+    }
+    if (GEST.axis === 'x'){
+      const w = swipeWidth(g);
+      GEST.dx = Math.max(-w, Math.min(0, GEST.base + dx));
+      const inner = g.querySelector('.g-in');
+      if (inner) inner.style.transform = `translateX(${GEST.dx}px)`;
+    }
+  }, { passive: true });
+  /* 拖动时必须自己拦下滚动，否则页面会跟着一起滚 */
+  document.addEventListener('touchmove', e => {
+    if (!DRAG.on || !e.touches[0]) return;
+    e.preventDefault();
+    dragMove(e.touches[0].clientY);
+  }, { passive: false });
+  const end = () => {
+    clearTimeout(GEST.timer);
+    if (DRAG.on){ endDrag(); return; }
+    const g = GEST.el; GEST.el = null;
+    if (!g) return;
+    g.classList.remove('dragging');
+    if (GEST.axis !== 'x') return;
+    const w = swipeWidth(g), inner = g.querySelector('.g-in');
+    const open = GEST.dx < -w * 0.4;
+    g.classList.toggle('open', open);
+    if (inner) inner.style.transform = open ? `translateX(${-w}px)` : '';
+    GEST.suppress = Date.now();
+  };
+  document.addEventListener('pointerup', end);
+  document.addEventListener('pointercancel', end);
+  /* 桌面端：右键开菜单；手机长按触发的 contextmenu 直接吞掉，拖动时更不能弹 */
+  document.addEventListener('contextmenu', e => {
+    const g = e.target.closest('.gest');
+    if (!g) return;
+    e.preventDefault();
+    if (DRAG.on) return;
+    if ($('#dlgRoot') && $('#dlgRoot').innerHTML) return;
+    openRowMenu(g.dataset.g, Number(g.dataset.gid));
+  });
+}
+function rowMenuItems(type, id){
+  if (type === 'fact'){
+    const f = S.facts.find(x => x.id === id); if (!f) return [];
+    return [
+      { label:'修改内容', icon:'✎', run:() => actions.editFact(id) },
+      { label:'记一条新值', icon:'＋', hint:'旧值留作历史', run:() => actions.newValFact(id) },
+      { label:'删除这条', icon:'🗑', cls:'bad', run:() => actions.delFact(id) }
+    ];
+  }
+  if (type === 'event'){
+    const e = S.events.find(x => x.id === id); if (!e) return [];
+    const items = [{ label:'编辑', icon:'✎', run:() => actions.editEvent(id) }];
+    if (e.kind === 'todo') items.push({ label: e.done ? '标记为未完成' : '标记为完成', icon: e.done ? '↺' : '✓', run:() => actions.toggleTodoBy(id) });
+    return items.concat([
+      { label:'删除', icon:'🗑', cls:'bad', run:() => actions.delEvent(id) }
+    ]);
+  }
+  if (type === 'session'){
+    return [
+      { label:'打开这一局', icon:'↗', run:() => actions.openSession(id) },
+      { label:'编辑', icon:'✎', run:() => actions.editSession(id) },
+      { label:'删除', icon:'🗑', cls:'bad', run:() => actions.delSession(id) }
+    ];
+  }
+  if (type === 'skill'){
+    const s = S.skills.find(x => x.id === id); if (!s) return [];
+    const items = [{ label:'记录详情', icon:'✎', run:() => actions.skillEdit(id) }];
+    if (String(s.skill_key).startsWith('custom_')) items.push({ label:'删除节点', icon:'🗑', cls:'bad', run:() => actions.delSkill(id) });
+    return items;
+  }
+  return [];
+}
+async function openRowMenu(type, id){
+  const items = rowMenuItems(type, id);
+  if (!items.length) return;
+  const title = { fact:'这条信息', event:'这条事件', session:'这一局', skill:'这个节点' }[type] || '';
+  const pick = await showMenu(title, items);
+  if (!pick || !pick.run) return;
+  try { await pick.run(); } catch (err) { console.error(err); }
+}
+/* 拖完之后按屏幕上的新顺序写回 sort：只占用这组行原来的那几个序号，不影响别的分组 */
+async function commitOrder(table, ids){
+  const key = { facts:'facts', events:'events', sessions:'sessions', dog_skills:'skills' }[table];
+  const all = S[key] || [];
+  const rows = ids.map(id => all.find(x => x.id === id)).filter(Boolean);
+  if (rows.length < 2) return;
+  const hasSort = rows.every(r => typeof r.sort === 'number');
+  const slots = hasSort ? rows.map(r => r.sort).sort((a, b) => a - b) : rows.map((_, i) => i);
+  const changed = [];
+  rows.forEach((r, i) => { if (r.sort !== slots[i]) changed.push([r.id, slots[i]]); });
+  if (!changed.length) return;
+  for (const [id, sort] of changed) await must(T(table).update({ sort }).eq('id', id), '调整顺序');
+  await loadAll();
+}
+
+/* ========== 渲染 ========== */
+const TABS = [['home','首页'],['skills','技能树'],['info','信息'],['events','事件'],['sessions','局记录'],['pending','待确认'],['settings','设置']];
+
+function render(){
+  const app = $('#app');
+  if (!S.dog){
+    app.innerHTML = `<header class="top"><h1>Puppy Archive</h1></header>
+      <div class="card"><div class="empty">还没有档案</div><button class="btn pri" style="width:100%" data-act="newDog">新建小狗档案（使用通用模板）</button>
+      <div style="height:8px"></div><button class="btn" style="width:100%" data-act="importFile">从 JSON 导入已有档案</button>
+      <div style="height:8px"></div><button class="btn" style="width:100%" data-act="viewCode">查看口令</button></div>
+      <p class="tiny" style="text-align:center">同步状态：<span data-sync>${syncLabel()}</span></p>`;
+    return;
+  }
+  const nOpen = S.pending.filter(p => p.status === 'open').length;
+  const body = { home:vHome, skills:vSkills, info:vInfo, events:vEvents, sessions:vSessions, pending:vPending, settings:vSettings }[S.tab]();
+  app.innerHTML = `<header class="top"><h1>${esc(S.dog.code)}${S.dog.real_name?` <span class="sub">${esc(S.dog.real_name)}</span>`:''}</h1><span class="tiny" data-sync>${syncLabel()}</span>
+    ${S.dogs.length>1?`<select id="dogSel">${S.dogs.map(d=>`<option value="${d.id}" ${d.id===S.dog.id?'selected':''}>${esc(d.code)}</option>`).join('')}</select>`:''}</header>
+    ${body}
+    <nav class="bar"><div class="in">${TABS.map(([k,n]) => `<button data-tab="${k}" class="${S.tab===k?'on':''}">${n}${k==='pending'&&nOpen?`<span class="n">${nOpen}</span>`:''}</button>`).join('')}</div></nav>`;
+  const sel = $('#dogSel');
+  if (sel) sel.onchange = async () => { S.dog = S.dogs.find(d => d.id === Number(sel.value)); localStorage.setItem('dogId', S.dog.id); dropSessionLayer(); S.openSession = null; await loadAll(); };
+}
+
+/* --- 首页 --- */
+function levelStats(){
+  const out = {};
+  for (const lv of [1,2,3,4]){
+    const list = S.skills.filter(s => s.level === lv && s.status !== 'dropped');
+    const done = list.filter(s => s.status === 'tried' || s.status === 'mastered').length;
+    out[lv] = { total:list.length, done, mastered:list.filter(s=>s.status==='mastered').length };
+  }
+  return out;
+}
+function vHome(){
+  const st = levelStats();
+  const hintOf = k => (TEMPLATE.skills.find(s => s.k === k) || {}).hint || '';
+  const next = S.skills.filter(s => s.status === 'untried' && s.feasible !== 'no').sort((a,b)=>a.level-b.level).slice(0,3);
+  const todos = S.events.filter(e => e.kind === 'todo' && !e.done);
+  const recent = S.events.filter(e => e.kind !== 'todo').slice(0,5);
+  const last = S.sessions[0];
+  return `
+  <h2>技能树进度</h2>
+  <div class="card">${[1,2,3,4].map(lv => `
+    <div style="margin:${lv>1?'12px':'0'} 0 0">
+      <div class="sec-h"><span>${TEMPLATE.levels[lv]}</span><span class="sub">已尝试 ${st[lv].done}/${st[lv].total}，已掌握 ${st[lv].mastered}</span></div>
+      <div class="bar-out" style="margin-top:5px"><i style="width:${st[lv].total?Math.round(st[lv].done/st[lv].total*100):0}%"></i></div>
+    </div>`).join('')}
+  </div>
+  <h2>下一步建议</h2>
+  ${next.length ? next.map(s => `<div class="card"><div class="row c"><span class="tag lv">L${s.level}</span><b class="grow">${esc(s.name)}</b></div><div class="sub" style="margin-top:4px">${esc(hintOf(s.skill_key))}</div></div>`).join('') : '<div class="card empty">没有可推荐的未尝试节点</div>'}
+  <h2>待办（${todos.length}）</h2>
+  ${todos.length ? todos.slice(0,8).map(rowEvent).join('') : '<div class="card empty">没有未完成待办</div>'}
+  <h2>最近一局</h2>
+  ${last ? `<div class="card" data-act="openSession" data-id="${last.id}" style="cursor:pointer">${sessionHead(last)}<div style="margin-top:4px">${esc(last.summary||'')}</div></div>` : '<div class="card empty">还没有局记录</div>'}
+  <h2>最近事件</h2>
+  ${recent.length ? recent.map(rowEvent).join('') : '<div class="card empty">暂无</div>'}`;
+}
+
+/* --- 技能树 --- */
+function vSkills(){
+  const statusBtns = s => Object.entries(TEMPLATE.skillStatus).map(([k,n]) => `<button class="${s.status===k?'on':''} ${k==='dropped'?'dropped':''}" data-act="skillStatus" data-id="${s.id}" data-v="${k}">${n}</button>`).join('');
+  const feas = { yes:'可行', no:'不可行', '':'未判断' };
+  return [1,2,3,4].map(lv => {
+    const list = S.skills.filter(s => s.level === lv);
+    return `<h2>${TEMPLATE.levels[lv]}</h2>` + list.map(s => `
+      <div class="gest" data-g="skill" data-grp="skill:${s.level}" data-gid="${s.id}">
+        ${String(s.skill_key).startsWith('custom_')?`<div class="g-act"><button class="bad" data-act="delSkill" data-id="${s.id}">删</button></div>`:''}
+        <div class="g-in skill ${s.status==='dropped'?'dropped':''}">
+        <div class="row c"><b class="grow">${esc(s.name)}</b>
+          ${s.feasible?`<span class="tag ${s.feasible==='no'?'unverified':'stated'}">${feas[s.feasible]||esc(s.feasible)}</span>`:''}
+          <button class="btn sm" data-act="skillEdit" data-id="${s.id}">详情</button></div>
+        <div class="sub">${esc((TEMPLATE.skills.find(t=>t.k===s.skill_key)||{}).hint||'')}</div>
+        <div class="st">${statusBtns(s)}</div>
+        ${s.first_date||s.effect||s.quote||s.feasible_note?`<div style="margin-top:8px;font-size:14px">
+          ${s.first_date?`<div class="tiny">首次：${esc(s.first_date)}</div>`:''}
+          ${s.effect?`<div>效果：${esc(s.effect)}</div>`:''}
+          ${s.quote?`<div>原话：“${esc(s.quote)}”</div>`:''}
+          ${s.feasible_note?`<div class="sub">可行性：${esc(s.feasible_note)}</div>`:''}</div>`:''}
+      </div></div>`).join('');
+  }).join('') + `<p class="tiny" style="text-align:center"><a href="#" data-act="addSkill">添加自定义节点</a></p>`;
+}
+
+/* --- 信息 --- */
+const hintLine = () => S.hintOff ? '' : `<div class="hint">左滑可直接改或删，长按后上下拖动可调整顺序<button data-act="dismissHint" title="不再提示">×</button></div>`;
+function vInfo(){
+  const live = S.facts.filter(f => !f.superseded);
+  const old = S.facts.filter(f => f.superseded);
+  const group = dim => {
+    const list = live.filter(f => f.dimension === dim);
+    const cats = [...new Set([...(TEMPLATE.factCategories[dim]||[]), ...list.map(f=>f.category)])].filter(c => list.some(f => f.category === c));
+    if (!cats.length) return '<div class="card empty">暂无</div>';
+    return cats.map(c => `<h2>${esc(c)}</h2><div class="card" style="padding:2px 14px">${list.filter(f=>f.category===c).map(rowFact).join('')}</div>`).join('');
+  };
+  return `
+  <div class="sec-h"><h2 style="margin-top:14px">个人维度</h2><button class="btn sm pri" data-act="addFact" data-dim="person">添加</button></div>
+  ${hintLine()}
+  ${group('person')}
+  <div class="sec-h"><h2>局内维度</h2><button class="btn sm pri" data-act="addFact" data-dim="session">添加</button></div>
+  ${group('session')}
+  ${old.length?`<p class="tiny" style="text-align:center"><a href="#" data-act="toggleOld">${S.showOld?'隐藏':'显示'}已被替换的旧值（${old.length}）</a></p>`:''}
+  ${S.showOld ? old.map(f => `<div class="card"><div class="kv old"><div class="k">${esc(f.key)}</div><div class="v grow">${esc(f.value)} <span class="tiny">${esc(f.observed_on||'')}</span></div><button class="btn sm danger" data-act="delFact" data-id="${f.id}">删</button></div></div>`).join('') : ''}`;
+}
+function rowFact(f){
+  return `<div class="gest plain" data-g="fact" data-grp="fact:${esc(f.dimension)}:${esc(f.category)}" data-gid="${f.id}">
+    <div class="g-act"><button class="ok" data-act="newValFact" data-id="${f.id}">新值</button><button class="warn" data-act="editFact" data-id="${f.id}">改</button><button class="bad" data-act="delFact" data-id="${f.id}">删</button></div>
+    <div class="g-in">
+      <div style="font-weight:600">${esc(f.key)}</div>
+      <div style="margin-top:2px">${esc(f.value)}</div>
+      <div class="tiny"><span class="tag ${f.confidence}">${esc(TEMPLATE.confidence[f.confidence]||f.confidence)}</span>
+      ${f.observed_on?esc(f.observed_on):''} ${f.source?'· '+esc(f.source):''}${f.note?'<br>'+esc(f.note):''}</div>
+    </div></div>`;
+}
+
+/* --- 事件 --- */
+function rowEvent(e){
+  const isTodo = e.kind === 'todo';
+  return `<div class="gest" data-g="event" data-grp="event" data-gid="${e.id}">
+    <div class="g-act">${isTodo?`<button class="ok" data-act="toggleTodoBy" data-id="${e.id}">${e.done?'未完':'完成'}</button>`:''}<button class="bad" data-act="delEvent" data-id="${e.id}">删</button></div>
+    <div class="g-in"><div class="row">
+    ${isTodo?`<input type="checkbox" class="checkbox" data-act="toggleTodo" data-id="${e.id}" ${e.done?'checked':''}>`:`<span class="tag">事件</span>`}
+    <div class="grow" data-act="editEvent" data-id="${e.id}" style="cursor:pointer"><div style="${e.done?'text-decoration:line-through;color:var(--sub)':''}">${esc(e.title)}</div>
+    ${e.detail?`<div class="sub">${esc(e.detail)}</div>`:''}
+    <div class="tiny">${esc(e.event_date||'')} ${e.due_date?'· 截止 '+esc(e.due_date):''} ${e.source?'· '+esc(e.source):''}</div></div></div></div></div>`;
+}
+function vEvents(){
+  const f = S.evFilter;
+  let list = S.events;
+  if (f === 'todo') list = list.filter(e => e.kind === 'todo' && !e.done);
+  if (f === 'done') list = list.filter(e => e.kind === 'todo' && e.done);
+  if (f === 'event') list = list.filter(e => e.kind !== 'todo');
+  const chips = [['all','全部'],['todo','待办'],['done','已完成'],['event','事件']];
+  return `<div class="sec-h"><h2 style="margin-top:14px">事件与待办</h2><button class="btn sm pri" data-act="addEvent">添加</button></div>
+    <div class="st" style="margin:0 0 10px">${chips.map(([k,n])=>`<button class="${f===k?'on':''}" data-act="evFilter" data-v="${k}">${n}</button>`).join('')}</div>
+    ${hintLine()}
+    ${list.length ? list.map(rowEvent).join('') : '<div class="card empty">暂无</div>'}`;
+}
+
+/* --- 局记录 --- */
+const TYPE_N = { play:'调教局', chat:'纯聊天', other:'其他' };
+function sessionHead(s){
+  return `<div class="row c"><b class="grow">${s.seq?'第 '+s.seq+' 局':'局'} <span class="sub">${esc(s.session_date||'')}</span></b><span class="tag">${esc(TYPE_N[s.type]||s.type)}</span></div>
+    <div class="tiny">${esc(s.format||'')} ${s.env?'· '+esc(s.env):''} ${s.duration_min?'· '+esc(s.duration_min)+' 分钟':''}</div>`;
+}
+function vSessions(){
+  if (S.openSession) return vSessionDetail();
+  return `<div class="sec-h"><h2 style="margin-top:14px">局记录（${S.sessions.length}）</h2><button class="btn sm pri" data-act="addSession">添加</button></div>
+    ${hintLine()}
+    ${S.sessions.length ? S.sessions.map(s => `<div class="gest" data-g="session" data-grp="session" data-gid="${s.id}">
+      <div class="g-act"><button class="warn" data-act="editSession" data-id="${s.id}">改</button><button class="bad" data-act="delSession" data-id="${s.id}">删</button></div>
+      <div class="g-in" data-act="openSession" data-id="${s.id}" style="cursor:pointer">${sessionHead(s)}<div style="margin-top:4px">${esc(s.summary||'')}</div></div>
+    </div>`).join('') : '<div class="card empty">暂无</div>'}`;
+}
+function vSessionDetail(){
+  const s = S.openSession;
+  const chat = Array.isArray(s.chat) ? s.chat : [];
+  const rep = s.report && typeof s.report === 'object' ? Object.entries(s.report) : [];
+  const used = (Array.isArray(s.skills_used) ? s.skills_used : []).map(k => (S.skills.find(x=>x.skill_key===k)||{}).name || k);
+  return `<div class="row c" style="margin:12px 0"><button class="btn sm" data-act="closeSession">返回</button><div class="grow"></div>
+      <button class="btn sm" data-act="editSession" data-id="${s.id}">编辑</button>
+      <button class="btn sm" data-act="chatSession" data-id="${s.id}">导入聊天</button>
+      <button class="btn sm danger" data-act="delSession" data-id="${s.id}">删除</button></div>
+    <div class="card">${sessionHead(s)}${s.summary?`<div style="margin-top:6px">${esc(s.summary)}</div>`:''}
+      ${used.length?`<div class="tiny" style="margin-top:6px">用到的玩法：${used.map(esc).join('、')}</div>`:''}</div>
+    ${rep.length?`<h2>平台报告（仅作输入参考）</h2><div class="card">${rep.map(([k,v])=>`<div class="kv"><div class="k">${esc(k)}</div><div class="grow">${esc(v)}</div></div>`).join('')}</div>`:''}
+    <h2>聊天记录（${chat.length}）</h2>
+    ${chat.length ? `<div class="card chat">${chat.map(m=>`<div class="bubble ${m.who==='me'?'me':'dog'}">${esc(m.text)}</div>`).join('')}</div>` : '<div class="card empty">未导入</div>'}`;
+}
+
+/* --- 待确认 --- */
+function vPending(){
+  const open = S.pending.filter(p => p.status === 'open');
+  const done = S.pending.filter(p => p.status !== 'open').slice(0,10);
+  const card = p => `<div class="card"><div class="row c"><span class="tag">${esc(p.proposed_by)}</span><b class="grow">${esc(p.action==='update'?'修改':'新增')} · ${esc({facts:'个人信息',dog_skills:'技能',sessions:'局记录',events:'事件'}[p.target_table]||p.target_table)}</b></div>
+    ${p.reason?`<div class="sub" style="margin:4px 0">${esc(p.reason)}</div>`:''}
+    <pre class="json">${esc(JSON.stringify(p.payload,null,1))}</pre>
+    ${p.status==='open'?`<div class="row" style="margin-top:8px"><button class="btn grow" data-act="rejectPending" data-id="${p.id}">驳回</button><button class="btn pri grow" data-act="approvePending" data-id="${p.id}">确认写入</button></div>`:`<div class="tiny" style="margin-top:6px">${p.status==='approved'?'已确认':'已驳回'}</div>`}</div>`;
+  return `<h2 style="margin-top:14px">待确认队列（${open.length}）</h2>
+    <p class="tiny" style="margin:0 2px 8px">AI 提议的改动先放在这里，确认后才写入档案。</p>
+    ${open.length ? open.map(card).join('') : '<div class="card empty">没有待确认项</div>'}
+    ${done.length?`<h2>最近处理</h2>${done.map(card).join('')}`:''}`;
+}
+
+/* --- 设置 --- */
+function vSettings(){
+  const d = S.dog;
+  return `<h2 style="margin-top:14px">当前档案</h2>
+  <div class="card"><div class="kv"><div class="k">代号</div><div>${esc(d.code)}</div></div>
+    <div class="kv"><div class="k">真名</div><div>${esc(d.real_name||'')}</div></div>
+    <div class="kv"><div class="k">状态</div><div>${esc(d.status)}</div></div>
+    <div class="kv"><div class="k">备注</div><div style="white-space:pre-wrap">${esc(d.note||'')}</div></div>
+    <button class="btn" style="margin-top:8px" data-act="editDog">编辑</button></div>
+  <h2>档案管理</h2>
+  <div class="card"><div class="row" style="flex-wrap:wrap">
+    <button class="btn" data-act="newDog">新建小狗（通用模板）</button>
+    <button class="btn" data-act="exportDog">导出当前档案 JSON</button>
+    <button class="btn" data-act="importFile">导入 JSON</button>
+    <button class="btn" data-act="exportTemplate">下载通用模板 JSON</button></div>
+    <p class="tiny" style="margin:8px 0 0">「导出当前档案」只含这一只小狗，可交给 AI 助手；「导入 JSON」会新建一份档案，不会覆盖已有数据。</p></div>
+  <h2>口令与同步</h2>
+  <div class="card">
+    <div class="kv"><div class="k">同步状态</div><div class="grow"><span data-sync>${syncLabel()}</span> <span class="tiny">云端版本 ${STORE.rev}${STORE.syncedAt?'，'+esc(new Date(STORE.syncedAt).toLocaleString('zh-CN',{hour12:false})):''}</span></div></div>
+    <div class="kv"><div class="k">口令</div><div class="grow" style="font-family:ui-monospace,Menlo,monospace;font-weight:600;letter-spacing:.12em">${S.showCode?esc(formatCode(STORE.code)):'••••'}</div></div>
+    <div class="row" style="flex-wrap:wrap;margin-top:8px">
+      <button class="btn sm" data-act="toggleCode">${S.showCode?'隐藏':'显示'}</button>
+      <button class="btn sm" data-act="syncNow">立即同步</button></div>
+    <p class="tiny" style="margin:8px 0 0">换设备或清了浏览器数据：打开本页链接，输入这 4 位数字即可找回。忘了就找不回云端那份，请顺手在备忘录里记一下。</p></div>
+  <h2>本机</h2>
+  <div class="card"><div class="row" style="flex-wrap:wrap">
+    <button class="btn" data-act="exportAll">导出全部备份 JSON</button>
+    <button class="btn danger" data-act="wipeLocal">清除本机数据</button></div>
+    <p class="tiny" style="margin:8px 0 0">清除只影响这台设备，云端不动；之后用口令找回。</p></div>`;
+}
+
+/* ========== 交互 ========== */
+document.addEventListener('click', async e => {
+  /* 手势刚结束时的那一下点击不算数，避免滑完/长按后误触 */
+  if (Date.now() - GEST.suppress < 350 && e.target.closest('.gest .g-in')){ e.preventDefault(); e.stopPropagation(); return; }
+  /* 点在已滑开的行上：先收起，不触发原本的点击 */
+  if (e.target.closest('.gest.open .g-in')){ closeSwipe(); e.preventDefault(); e.stopPropagation(); return; }
+  /* 点了滑出的按钮：动作执行前先收起 */
+  if (e.target.closest('.g-act')) closeSwipe();
+  const tabBtn = e.target.closest('[data-tab]');
+  if (tabBtn){ S.tab = tabBtn.dataset.tab; if (S.tab !== 'sessions' && S.openSession){ dropSessionLayer(); S.openSession = null; } render(); window.scrollTo(0,0); return; }
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  if (el.type === 'checkbox'){ /* 交给 change 事件 */ return; }
+  const act = el.dataset.act, id = Number(el.dataset.id);
+  if (el.tagName === 'A') e.preventDefault();
+  try { await actions[act]?.(id, el); } catch (err) { console.error(err); }
+});
+document.addEventListener('change', async e => {
+  const el = e.target.closest('[data-act="toggleTodo"]');
+  if (el) { try { await actions.toggleTodo(Number(el.dataset.id), el); } catch(_){} }
+});
+
+const SKILL_FIELDS = () => [
+  { k:'status', label:'状态', type:'select', options:Object.entries(TEMPLATE.skillStatus) },
+  { k:'first_date', label:'首次日期', type:'date' },
+  { k:'effect', label:'效果', type:'textarea', ph:'客观描述当时发生了什么' },
+  { k:'quote', label:'她的原话', type:'textarea', ph:'原话，不改写' },
+  { k:'feasible', label:'对她是否可行', type:'select', options:[['','未判断'],['yes','可行'],['no','不可行']] },
+  { k:'feasible_note', label:'原因', type:'textarea', ph:'如：打字模式、宿舍不能出声' }
+];
+const FACT_FIELDS = dim => [
+  { k:'dimension', label:'维度', type:'select', options:Object.entries(DIM) },
+  { k:'category', label:'分类', list:TEMPLATE.factCategories[dim] || [].concat(...Object.values(TEMPLATE.factCategories)) },
+  { k:'key', label:'字段', ph:'如：学校、籍贯、偏好的姿势' },
+  { k:'value', label:'内容', type:'textarea', ph:'只写事实，原话用引号' },
+  { k:'confidence', label:'可信度', type:'select', options:Object.entries(TEMPLATE.confidence) },
+  { k:'observed_on', label:'日期', type:'date' },
+  { k:'source', label:'来源', ph:'如：11/25 聊天局 亲口说' },
+  { k:'note', label:'备注', type:'textarea', h:56 }
+];
+const EVENT_FIELDS = [
+  { k:'kind', label:'类型', type:'select', options:[['todo','待办'],['event','事件']] },
+  { k:'title', label:'内容' },
+  { k:'detail', label:'详情', type:'textarea', h:64 },
+  { k:'event_date', label:'发生日期', type:'date' },
+  { k:'due_date', label:'截止日期', type:'date' },
+  { k:'source', label:'来源' }
+];
+const nul = v => (v === '' || v === undefined) ? null : v;
+
+const actions = {
+  async newDog(){
+    openForm({ title:'新建小狗（通用模板）', fields:[
+      { k:'code', label:'代号 / 称呼', ph:'如：皮皮' }, { k:'real_name', label:'真名（选填）' }, { k:'note', label:'备注', type:'textarea' }],
+      onSubmit: async v => { if (!v.code) { toast('请填写代号'); throw 0; } await createDog(v); } });
+  },
+  async editDog(){
+    openForm({ title:'编辑档案', initial:S.dog, fields:[
+      { k:'code', label:'代号' }, { k:'real_name', label:'真名' },
+      { k:'status', label:'状态', type:'select', options:[['active','进行中'],['paused','暂停'],['ended','结束']] },
+      { k:'note', label:'备注', type:'textarea', h:120, ph:'跨平台、见面等信息记在这里' }],
+      onSubmit: async v => { await must(T('dogs').update({ code:v.code, real_name:nul(v.real_name), status:v.status, note:nul(v.note), updated_at:nowISO() }).eq('id',S.dog.id), '保存'); await loadDogs(); } });
+  },
+  async skillStatus(id, el){
+    const s = S.skills.find(x => x.id === id); const v = el.dataset.v;
+    const patch = { status:v, updated_at:nowISO() };
+    if ((v === 'tried' || v === 'mastered') && !s.first_date) patch.first_date = today();
+    await must(T('dog_skills').update(patch).eq('id',id), '更新技能'); await loadAll();
+  },
+  async skillEdit(id){
+    const s = S.skills.find(x => x.id === id);
+    openForm({ title:s.name, initial:s, fields:SKILL_FIELDS(), onSubmit: async v => {
+      await must(T('dog_skills').update({ status:v.status, first_date:nul(v.first_date), effect:nul(v.effect), quote:nul(v.quote), feasible:nul(v.feasible), feasible_note:nul(v.feasible_note), updated_at:nowISO() }).eq('id',id), '保存'); await loadAll(); } });
+  },
+  async addSkill(){
+    openForm({ title:'添加自定义节点', fields:[
+      { k:'level', label:'层级', type:'select', options:[[1,'L1 基础'],[2,'L2 进阶'],[3,'L3 高控制'],[4,'L4 深度']] }, { k:'name', label:'名称' }],
+      onSubmit: async v => { if (!v.name) { toast('请填写名称'); throw 0; }
+        await must(T('dog_skills').insert({ dog_id:S.dog.id, skill_key:'custom_'+Date.now(), level:Number(v.level), name:v.name }), '添加'); await loadAll(); } });
+  },
+
+  async delSkill(id){
+    const s = S.skills.find(x => x.id === id);
+    const ok = await confirmBox(`删除技能节点「${s ? s.name : ''}」？\n\n这个节点上记录的效果、原话会一起删掉，云端也会删。`, { title:'删除技能节点', ok:'删除' });
+    if (!ok) return;
+    await must(T('dog_skills').delete().eq('id',id), '删除');
+    closeSwipe(); toast('已删除'); await loadAll();
+  },
+  /* 信息 */
+  async addFact(_, el){
+    const dim = el.dataset.dim;
+    openForm({ title:'添加信息', initial:{ dimension:dim, confidence:'stated', observed_on:today() }, fields:FACT_FIELDS(dim), onSubmit: async v => {
+      if (!v.key || !v.value) { toast('字段和内容必填'); throw 0; }
+      await must(T('facts').insert({ dog_id:S.dog.id, dimension:v.dimension, category:v.category||'基础', key:v.key, value:v.value, confidence:v.confidence, observed_on:nul(v.observed_on), source:nul(v.source), note:nul(v.note) }), '保存'); await loadAll(); } });
+  },
+  async editFact(id){
+    const f = S.facts.find(x => x.id === id);
+    openForm({ title:'修正（直接覆盖）', initial:f, fields:FACT_FIELDS(f.dimension), onSubmit: async v => {
+      await must(T('facts').update({ dimension:v.dimension, category:v.category, key:v.key, value:v.value, confidence:v.confidence, observed_on:nul(v.observed_on), source:nul(v.source), note:nul(v.note), updated_at:nowISO() }).eq('id',id), '保存'); await loadAll(); } });
+  },
+  async newValFact(id){
+    const f = S.facts.find(x => x.id === id);
+    openForm({ title:'记录新值（旧值保留为历史）', initial:{ ...f, value:'', observed_on:today(), source:'', note:'' }, fields:FACT_FIELDS(f.dimension), onSubmit: async v => {
+      if (!v.value) { toast('请填写新内容'); throw 0; }
+      await must(T('facts').insert({ dog_id:S.dog.id, dimension:v.dimension, category:v.category, key:v.key, value:v.value, confidence:v.confidence, observed_on:nul(v.observed_on), source:nul(v.source), note:nul(v.note) }), '保存');
+      await must(T('facts').update({ superseded:true, updated_at:nowISO() }).eq('id',id), '标记旧值'); await loadAll(); } });
+  },
+  async delFact(id){
+    const f = S.facts.find(x => x.id === id);
+    const name = f ? `${f.key}：${String(f.value || '').slice(0, 40)}` : '这条记录';
+    const ok = await confirmBox('删除「' + name + '」？\n\n删了就没了，云端也会一起删。', { title:'删除信息', ok:'删除' });
+    if (!ok) return;
+    await must(T('facts').delete().eq('id',id), '删除');
+    toast('已删除'); await loadAll();
+  },
+  toggleOld(){ S.showOld = !S.showOld; render(); },
+
+  /* 事件 */
+  evFilter(_, el){ S.evFilter = el.dataset.v; render(); },
+  async addEvent(){
+    openForm({ title:'添加', initial:{ kind:'todo', event_date:today() }, fields:EVENT_FIELDS, onSubmit: async v => {
+      if (!v.title) { toast('请填写内容'); throw 0; }
+      await must(T('events').insert({ dog_id:S.dog.id, kind:v.kind, title:v.title, detail:nul(v.detail), event_date:nul(v.event_date), due_date:nul(v.due_date), source:nul(v.source) }), '保存'); await loadAll(); } });
+  },
+  async editEvent(id){
+    const e = S.events.find(x => x.id === id);
+    openForm({ title:'编辑', initial:e, fields:EVENT_FIELDS,
+      extra:`<button type="button" class="btn sm danger" id="delEv" style="margin-top:6px">删除这条</button>`,
+      onSubmit: async v => {
+        await must(T('events').update({ kind:v.kind, title:v.title, detail:nul(v.detail), event_date:nul(v.event_date), due_date:nul(v.due_date), source:nul(v.source), updated_at:nowISO() }).eq('id',id), '保存'); await loadAll(); } });
+    const del = $('#delEv'); if (del) del.onclick = async () => {
+      const ok = await confirmBox('删除这条？', { title:'删除事件', ok:'删除' });
+      if (!ok) return;
+      await must(T('events').delete().eq('id',id), '删除'); closeModal(); await loadAll();
+    };
+  },
+  async delEvent(id){
+    const e = S.events.find(x => x.id === id);
+    const ok = await confirmBox(`删除「${e ? e.title : '这条'}」？\n\n删了就没了，云端也会一起删。`, { title:'删除事件', ok:'删除' });
+    if (!ok) return;
+    await must(T('events').delete().eq('id',id), '删除');
+    toast('已删除'); closeSwipe(); await loadAll();
+  },
+  async toggleTodoBy(id){
+    const e = S.events.find(x => x.id === id);
+    const done = !e.done;
+    await must(T('events').update({ done, done_at: done ? nowISO() : null, updated_at:nowISO() }).eq('id',id), '更新');
+    closeSwipe(); await loadAll();
+  },
+  async toggleTodo(id, el){
+    const done = el.checked;
+    await must(T('events').update({ done, done_at: done ? nowISO() : null, updated_at:nowISO() }).eq('id',id), '更新'); await loadAll();
+  },
+
+  /* 局 */
+  async openSession(id){
+    const rows = await must(T('sessions').select('*').eq('id',id), '读取局');
+    S.openSession = rows[0]; S.tab = 'sessions'; render(); window.scrollTo(0,0);
+    /* 详情页压一层 history：手机返回键先回到列表，而不是退出应用 */
+    if (!LAYERS.some(l => l.kind === 'session')) pushLayer(closeSessionView, 'session');
+  },
+  closeSession(){ if (!closeLayerOf('session')) closeSessionView(); },
+  async addSession(){ sessionForm(null); },
+  async editSession(id){ sessionForm(S.openSession && S.openSession.id === id ? S.openSession : S.sessions.find(x=>x.id===id)); },
+  async delSession(id){
+    const s = S.sessions.find(x => x.id === id) || (S.openSession && S.openSession.id === id ? S.openSession : null);
+    const ok = await confirmBox(`删除${s ? '「第 ' + (s.seq || '?') + ' 局 · ' + (s.session_date || '') + '」' : '这一局'}的全部记录？\n\n聊天记录和平台报告会一起删掉，云端也会删。`, { title:'删除局记录', ok:'删除' });
+    if (!ok) return;
+    await must(T('sessions').delete().eq('id',id), '删除'); dropSessionLayer(); S.openSession = null; closeSwipe(); await loadAll();
+  },
+  async chatSession(id){
+    openForm({ title:'导入聊天记录', submitText:'导入', fields:[
+      { k:'text', label:'粘贴文本，每行一条', type:'textarea', h:220, ph:'以“我：”开头的行算作你，其余算作她。' },
+      { k:'mode', label:'导入方式', type:'select', options:[['replace','覆盖已有聊天'],['append','追加到已有聊天']] }],
+      onSubmit: async v => {
+        const msgs = v.text.split('\n').map(l => l.trim()).filter(Boolean).map(l => {
+          const m = l.match(/^(我|主人)[:：]\s*(.*)$/); return m ? { who:'me', text:m[2] } : { who:'dog', text:l.replace(/^(她|对方)[:：]\s*/,'') };
+        });
+        const cur = S.openSession && S.openSession.id === id && Array.isArray(S.openSession.chat) ? S.openSession.chat : [];
+        const chat = v.mode === 'append' ? cur.concat(msgs) : msgs;
+        await must(T('sessions').update({ chat, updated_at:nowISO() }).eq('id',id), '导入');
+        await actions.openSession(id); await loadAll(); S.tab='sessions'; render();
+      } });
+  },
+
+  /* 待确认 */
+  async approvePending(id){
+    const p = S.pending.find(x => x.id === id);
+    const ok = ['facts','dog_skills','sessions','events'];
+    if (!ok.includes(p.target_table)) return toast('不支持的目标表');
+    const payload = { ...p.payload }; delete payload.id; delete payload.owner_id; delete payload.dog_id;
+    if (p.action === 'update'){
+      if (!p.target_id) return toast('缺少目标 id');
+      payload.updated_at = nowISO();
+      await must(T(p.target_table).update(payload).eq('id',p.target_id).eq('dog_id',S.dog.id), '写入');
+    } else {
+      await must(T(p.target_table).insert({ ...payload, dog_id:S.dog.id }), '写入');
+    }
+    await must(T('pending').update({ status:'approved', resolved_at:nowISO() }).eq('id',id), '更新队列');
+    toast('已写入档案'); await loadAll();
+  },
+  async rejectPending(id){
+    await must(T('pending').update({ status:'rejected', resolved_at:nowISO() }).eq('id',id), '更新队列'); await loadAll();
+  },
+
+  /* 导出导入 */
+  async exportDog(){
+    const d = S.dog;
+    const sessions = await must(T('sessions').select('*').eq('dog_id',d.id), '读取局记录');
+    const att = await must(T('attachments').select('*').eq('dog_id',d.id), '读取附件');
+    const data = { schema:'puppy-archive/1', exported_at:nowISO(), dog:d, facts:S.facts, dog_skills:S.skills, sessions, events:S.events, pending:S.pending, attachments:att };
+    download(`${d.code}.json`, JSON.stringify(data, null, 2));
+    toast('已导出');
+  },
+  exportTemplate(){ download('puppy-archive-template.json', JSON.stringify(TEMPLATE, null, 2)); },
+  importFile(){
+    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'application/json,.json';
+    inp.onchange = async () => {
+      const f = inp.files[0]; if (!f) return;
+      try { await importJSON(JSON.parse(await f.text())); } catch (err) { console.error(err); toast('导入失败：'+errText(err)); }
+    };
+    inp.click();
+  },
+  viewCode(){
+    if (!STORE) return;
+    showCodeModal(STORE.code, null, '关闭');
+  },
+  toggleCode(){ S.showCode = !S.showCode; render(); },
+  async syncNow(){
+    if (!cloud) return toast('云端组件没加载成功，刷新页面再试');
+    setSync('syncing'); toast('正在同步…');
+    await syncNow({ pull: true });
+    toast(syncLabel());
+  },
+  exportAll(){
+    download('puppy-archive-backup-' + today() + '.json', JSON.stringify({ schema:'puppy-archive-db/1', db:STORE.db }, null, 2));
+    toast('已导出备份');
+  },
+  async wipeLocal(){
+    const ok = await confirmBox('清除这台设备上的档案数据？\n\n云端那份不动，之后在启动页输入口令就能找回。建议先“导出全部备份”。', { title:'清除本机数据', ok:'清除' });
+    if (!ok) return;
+    localStorage.removeItem(LS_KEY); localStorage.removeItem('dogId');
+    STORE = null; location.reload();
+  },
+  dismissHint(){ S.hintOff = true; localStorage.setItem('pa_hint_off', '1'); render(); },
+  reload(){ location.reload(); }
+};
+
+function sessionForm(s){
+  const skillOpts = S.skills.map(k => [k.skill_key, k.name]);
+  openForm({ title: s ? '编辑局' : '添加局', fields:[
+    { k:'seq', label:'第几局', type:'number' }, { k:'session_date', label:'日期', type:'date' },
+    { k:'type', label:'类型', type:'select', options:Object.entries(TYPE_N) },
+    { k:'format', label:'形式', ph:'如：我语音、她打字' }, { k:'env', label:'环境', ph:'如：宿舍，不能出声' },
+    { k:'duration_min', label:'时长（分钟）', type:'number' },
+    { k:'summary', label:'摘要', type:'textarea', ph:'客观记录发生了什么' },
+    { k:'skills_used', label:'用到的玩法', type:'checks', options:skillOpts },
+    { k:'report', label:'平台报告（每行“键: 值”）', type:'textarea', ph:'时长: 94:00' }],
+    initial: s ? { ...s, report: s.report && typeof s.report==='object' ? Object.entries(s.report).map(([k,v])=>`${k}: ${v}`).join('\n') : '' } : { type:'play', session_date:today(), seq:S.sessions.length+1 },
+    onSubmit: async v => {
+      const report = {}; v.report.split('\n').forEach(l => { const m = l.match(/^\s*([^:：]+)[:：]\s*(.*)$/); if (m) report[m[1].trim()] = m[2].trim(); });
+      const row = { seq:v.seq?Number(v.seq):null, session_date:nul(v.session_date), type:v.type, format:nul(v.format), env:nul(v.env), duration_min:v.duration_min?Number(v.duration_min):null, summary:nul(v.summary), skills_used:v.skills_used, report:Object.keys(report).length?report:null };
+      if (s){ row.updated_at = nowISO(); await must(T('sessions').update(row).eq('id',s.id), '保存'); if (S.openSession && S.openSession.id === s.id) S.openSession = { ...S.openSession, ...row }; }
+      else await must(T('sessions').insert({ ...row, dog_id:S.dog.id }), '保存');
+      await loadAll();
+    } });
+}
+
+function download(name, text){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type:'application/json' })); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+const strip = (row, drop = []) => { const o = { ...row }; for (const k of ['id','owner_id','created_at',...drop]) delete o[k]; return o; };
+async function importJSON(j){
+  if (j && j.schema === 'puppy-archive-db/1' && j.db){
+    if (!await confirmBox('这是完整备份。导入会用它的全部内容替换本机当前的档案（当前数据会先在本机留一份备份）。', { title:'导入完整备份', ok:'替换' })) return;
+    backup('before-import', STORE.db);
+    STORE.db = normDB(clone(j.db)); touch(); localStorage.removeItem('dogId');
+    toast('已导入完整备份'); await loadDogs(); return;
+  }
+  if (!j || !j.dog) throw new Error('缺少 dog 字段');
+  const code = j.dog.code;
+  const dogs = await must(T('dogs').insert({ code, real_name:j.dog.real_name||null, status:j.dog.status||'active', note:j.dog.note||null }).select(), '建档');
+  const dogId = dogs[0].id;
+  const withDog = rows => (rows||[]).map(r => ({ ...strip(r, ['dog_id','session_id']), dog_id:dogId }));
+  if (j.dog_skills?.length) await must(T('dog_skills').insert(withDog(j.dog_skills)), '导入技能');
+  else await must(T('dog_skills').insert(TEMPLATE.skills.map(s => ({ dog_id:dogId, skill_key:s.k, level:s.lv, name:s.name }))), '初始化技能');
+  const sessionMap = {};
+  for (const s of (j.sessions||[])){
+    const r = await must(T('sessions').insert({ ...strip(s, ['dog_id']), dog_id:dogId }).select(), '导入局');
+    sessionMap[s.id] = r[0].id;
+  }
+  const remap = rows => (rows||[]).map(r => ({ ...strip(r, ['dog_id','session_id']), dog_id:dogId, session_id: r.session_id ? (sessionMap[r.session_id] || null) : null }));
+  if (j.facts?.length) await must(T('facts').insert(remap(j.facts)), '导入信息');
+  if (j.events?.length) await must(T('events').insert(remap(j.events)), '导入事件');
+  if (j.pending?.length) await must(T('pending').insert(withDog(j.pending)), '导入队列');
+  localStorage.setItem('dogId', dogId);
+  toast('导入完成'); await loadDogs();
+}
+
+boot().catch(e => fail('初始化失败：' + errText(e)));
+</script>
+</body>
+</html>
