@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Puppy Archive：按人建档，记录信息、事件、局记录与技能树。无需注册账号，本机即用，可选云端同步。">
+<meta name="robots" content="noindex, nofollow">
 <title>Puppy Archive</title>
 <link rel="icon" type="image/svg+xml" href="icon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
@@ -13,8 +15,8 @@
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#161513">
 <style>
 :root{
-  --bg:#f5f4f1;--card:#fff;--ink:#222;--sub:#76726b;--line:#e6e3dd;
-  --accent:#b4552d;--accent-soft:#f6e6dd;--ok:#3d7a4f;--warn:#b7791f;--bad:#b23a3a;--info:#3b6ea5;
+  --bg:#f5f4f1;--card:#fff;--ink:#222;--sub:#716d66;--line:#e6e3dd;
+  --accent:#9e4a26;--accent-soft:#f6e6dd;--ok:#3d7a4f;--warn:#8f5b12;--bad:#b23a3a;--info:#3b6ea5;
   --r:12px;
 }
 @media (prefers-color-scheme:dark){
@@ -124,6 +126,7 @@ input.code{text-align:center;font-size:26px;letter-spacing:.42em;text-indent:.42
 </head>
 <body>
 
+<main>
 <div id="login">
   <img class="logo" src="icon-180.png" alt="Puppy Archive" width="64" height="64">
   <h1>Puppy Archive</h1>
@@ -144,6 +147,7 @@ input.code{text-align:center;font-size:26px;letter-spacing:.42em;text-indent:.42
 </div>
 
 <div id="app" class="hide"></div>
+</main>
 <div id="modalRoot"></div>
 <div id="dlgRoot"></div>
 
@@ -193,7 +197,23 @@ window.__net = [];
 })();
 </script>
 <script src="config.js"></script>
-<script src="sdk.js"></script>
+<script>
+/* ===== SDK 按需加载 =====
+   sdk.js 是云端同步 SDK（约 70KB），只有配置了云端才需要。
+   「仅本机」模式下完全不下载，省掉一次传输与解析。 */
+window.__sdkReady = (function(){
+  const c = window.PA_CONFIG || {};
+  if (!(c.endpoint && c.publishableKey)) return Promise.resolve(false);
+  return new Promise(res => {
+    const s = document.createElement('script');
+    s.src = 'sdk.js';
+    s.async = false;
+    s.onload = () => res(true);
+    s.onerror = () => res(false);
+    document.head.appendChild(s);
+  });
+})();
+</script>
 <script>
 /* ========== 配置 ==========
    云端连接参数放在 config.js（window.PA_CONFIG），代码里不留密钥。
@@ -606,6 +626,7 @@ function wireStart(){
   };
 }
 async function boot(){
+  await window.__sdkReady;   /* 等 SDK 就绪；仅本机模式立即返回 */
   try { if (cloudReady && typeof WorkBuddyCloud !== 'undefined') cloud = WorkBuddyCloud.createWorkBuddyCloud(publicConfig); }
   catch (e) { console.error(e); cloud = null; }
   bindGestures();
