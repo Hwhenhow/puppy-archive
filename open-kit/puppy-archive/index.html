@@ -1125,7 +1125,7 @@ function vEvents(){
 /* --- 局记录 --- */
 const TYPE_N = { play:'调教局', chat:'纯聊天', other:'其他' };
 function sessionHead(s){
-  return `<div class="row c"><b class="grow">${s.seq?'第 '+s.seq+' 局':'局'} <span class="sub">${esc(s.session_date||'')}</span></b><span class="tag">${esc(TYPE_N[s.type]||s.type)}</span></div>
+  return `<div class="row c"><b class="grow">${s.seq?'第 '+s.seq+' 局':(s.type==='chat'?'聊天记录':'局')} <span class="sub">${esc(s.session_date||'')}</span></b><span class="tag">${esc(TYPE_N[s.type]||s.type)}</span></div>
     <div class="tiny">${esc(s.format||'')} ${s.env?'· '+esc(s.env):''} ${s.duration_min?'· '+esc(s.duration_min)+' 分钟':''}</div>`;
 }
 function vSessions(){
@@ -1364,7 +1364,7 @@ const actions = {
   async editSession(id){ sessionForm(S.openSession && S.openSession.id === id ? S.openSession : S.sessions.find(x=>x.id===id)); },
   async delSession(id){
     const s = S.sessions.find(x => x.id === id) || (S.openSession && S.openSession.id === id ? S.openSession : null);
-    const ok = await confirmBox(`删除${s ? '「第 ' + (s.seq || '?') + ' 局 · ' + (s.session_date || '') + '」' : '这一局'}的全部记录？\n\n聊天记录和平台报告会一起删掉，云端也会删。`, { title:'删除局记录', ok:'删除' });
+    const ok = await confirmBox(`删除${s ? '「' + (s.seq ? '第 ' + s.seq + ' 局' : (s.type === 'chat' ? '聊天记录' : '局')) + ' · ' + (s.session_date || '') + '」' : '这一局'}的全部记录？\n\n聊天记录和平台报告会一起删掉，云端也会删。`, { title:'删除局记录', ok:'删除' });
     if (!ok) return;
     await must(T('sessions').delete().eq('id',id), '删除'); dropSessionLayer(); S.openSession = null; closeSwipe(); await loadAll();
   },
@@ -1449,14 +1449,14 @@ const actions = {
 function sessionForm(s){
   const skillOpts = S.skills.map(k => [k.skill_key, k.name]);
   openForm({ title: s ? '编辑局' : '添加局', fields:[
-    { k:'seq', label:'第几局', type:'number' }, { k:'session_date', label:'日期', type:'date' },
+    { k:'seq', label:'第几局（纯聊天留空，不计局）', type:'number' }, { k:'session_date', label:'日期', type:'date' },
     { k:'type', label:'类型', type:'select', options:Object.entries(TYPE_N) },
     { k:'format', label:'形式', ph:'如：我语音、她打字' }, { k:'env', label:'环境', ph:'如：宿舍，不能出声' },
     { k:'duration_min', label:'时长（分钟）', type:'number' },
     { k:'summary', label:'摘要', type:'textarea', ph:'客观记录发生了什么' },
     { k:'skills_used', label:'用到的玩法', type:'checks', options:skillOpts },
     { k:'report', label:'平台报告（每行“键: 值”）', type:'textarea', ph:'时长: 94:00' }],
-    initial: s ? { ...s, report: s.report && typeof s.report==='object' ? Object.entries(s.report).map(([k,v])=>`${k}: ${v}`).join('\n') : '' } : { type:'play', session_date:today(), seq:S.sessions.length+1 },
+    initial: s ? { ...s, report: s.report && typeof s.report==='object' ? Object.entries(s.report).map(([k,v])=>`${k}: ${v}`).join('\n') : '' } : { type:'play', session_date:today(), seq:S.sessions.filter(x => x.type === 'play').length + 1 },
     onSubmit: async v => {
       const report = {}; v.report.split('\n').forEach(l => { const m = l.match(/^\s*([^:：]+)[:：]\s*(.*)$/); if (m) report[m[1].trim()] = m[2].trim(); });
       const row = { seq:v.seq?Number(v.seq):null, session_date:nul(v.session_date), type:v.type, format:nul(v.format), env:nul(v.env), duration_min:v.duration_min?Number(v.duration_min):null, summary:nul(v.summary), skills_used:v.skills_used, report:Object.keys(report).length?report:null };

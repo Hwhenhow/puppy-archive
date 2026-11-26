@@ -49,7 +49,7 @@
 | dogs | 小狗 | code 称呼、real_name、status、note |
 | facts | 个人信息 | dog_id、dimension、category、key、value、confidence、observed_on、source、superseded、note |
 | dog_skills | 技能节点 | dog_id、skill_key、level、name、status、first_date、effect、quote、feasible、feasible_note |
-| sessions | 局记录 | dog_id、seq、session_date、type（play/chat/other）、format、env、duration_min、summary、chat(数组 `{who:'dog'|'me', text}`)、report、skills_used(数组) |
+| sessions | 局记录 | dog_id、seq、session_date、type（play/chat/other）、format、env、duration_min、summary、chat(数组 `{who:'dog'|'me', text}`)。**局号规则**：只有 `type=play`（游戏）才计局号 `seq`；纯聊天 `type=chat` 的 `seq` 一律留空（null），不算局。聊天条目必须是 `{who,text}` 对象，写成纯字符串界面会显示空白；改 `chat`/`report` 前要先 `select('*')` 取全行，列表查询不带 `chat` 列，用列表行回写会把原聊天覆盖掉、report、skills_used(数组) |
 | events | 事件与待办 | dog_id、session_id、kind（event/todo）、title、detail、event_date、due_date、done |
 | pending | 待确认队列 | dog_id、proposed_by、target_table、action（insert/update）、target_id、payload、reason、status（open/approved/rejected） |
 | attachments | 附件索引 | dog_id、session_id、kind、name、storage_key、meta |
