@@ -730,11 +730,33 @@ function closeModal(){
   while (LAYERS.length && LAYERS[LAYERS.length - 1].kind === 'dlg') popLayer();
   if (!closeLayerOf('form')) dropModal();
 }
+/* ========== 滚动位置：进出详情时记住上一级停在哪 ========== */
+let scrollSeq = 0;
+/* 关掉浏览器自带的滚动恢复：它会在返回后把位置改回 0，盖掉我们记的位置 */
+try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (_) {}
+const nowY = () => Math.round(window.scrollY || window.pageYOffset || 0);
+/* 主动跳转（切 tab、进详情）：作废还在排队的“恢复滚动”，免得把我们拽回去 */
+function jumpTop(to){
+  scrollSeq++;
+  try { window.scrollTo(0, to || 0); } catch (_) {}
+}
+function restoreY(y){
+  if (typeof y !== 'number') return;
+  const my = ++scrollSeq;
+  const go = () => { try { window.scrollTo(0, y); } catch (_) {} };
+  go();                                   // 列表已同步重建，先立刻到位
+  requestAnimationFrame(() => {           // 字体/图片撑开高度后再校一次
+    if (my !== scrollSeq) return;         // 期间又发生别的跳转，就别抢
+    if (Math.abs(nowY() - y) < 2) return;
+    go();
+  });
+}
+
 /* ========== 返回键：弹窗 / 详情压一层 history，系统返回先关它们 ========== */
 const LAYERS = [];
 let selfPop = 0;
 function pushLayer(close, kind){
-  LAYERS.push({ close, kind });
+  LAYERS.push({ close, kind, y: nowY() });
   try { history.pushState({ paLayer: LAYERS.length }, '', location.href); } catch (_) {}
 }
 /* 界面自己关掉时：先退掉这层 history，再执行真正的关闭 */
@@ -744,6 +766,7 @@ function popLayer(value){
   selfPop++;
   try { history.back(); } catch (_) {}
   try { l.close(value); } catch (err) { console.error(err); }
+  restoreY(l.y);              // 关掉这层后，回到打开它时的滚动位置
   return true;
 }
 /* 只在栈顶正好是这一类界面时才退栈，避免把别的层一起关掉 */
@@ -760,7 +783,7 @@ function closeSessionView(){ S.openSession = null; S.tab = 'sessions'; render();
 window.addEventListener('popstate', () => {
   if (selfPop){ selfPop--; return; }
   const l = LAYERS.pop();
-  if (l){ try { l.close(undefined); } catch (err) { console.error(err); } }
+  if (l){ try { l.close(undefined); } catch (err) { console.error(err); } restoreY(l.y); }
 });
 /* ========== 对话框 / 底部菜单（替代浏览器原生弹窗） ========== */
 function closeDlg(){ const r = $('#dlgRoot'); if (r) r.innerHTML = ''; }
@@ -1207,7 +1230,7 @@ document.addEventListener('click', async e => {
   /* 点了滑出的按钮：动作执行前先收起 */
   if (e.target.closest('.g-act')) closeSwipe();
   const tabBtn = e.target.closest('[data-tab]');
-  if (tabBtn){ S.tab = tabBtn.dataset.tab; if (S.tab !== 'sessions' && S.openSession){ dropSessionLayer(); S.openSession = null; } render(); window.scrollTo(0,0); return; }
+  if (tabBtn){ S.tab = tabBtn.dataset.tab; if (S.tab !== 'sessions' && S.openSession){ dropSessionLayer(); S.openSession = null; } render(); jumpTop(); return; }
   const el = e.target.closest('[data-act]');
   if (!el) return;
   if (el.type === 'checkbox'){ /* 交给 change 事件 */ return; }
@@ -1355,9 +1378,16 @@ const actions = {
   /* 局 */
   async openSession(id){
     const rows = await must(T('sessions').select('*').eq('id',id), '读取局');
-    S.openSession = rows[0]; S.tab = 'sessions'; render(); window.scrollTo(0,0);
+    /* 从局列表点进去的，记下当时翻到哪，返回时原样回来 */
+    const fromList = !S.openSession && S.tab === 'sessions';
+    const backY = fromList ? nowY() : 0;
+    S.openSession = rows[0]; S.tab = 'sessions'; render(); jumpTop();
     /* 详情页压一层 history：手机返回键先回到列表，而不是退出应用 */
-    if (!LAYERS.some(l => l.kind === 'session')) pushLayer(closeSessionView, 'session');
+    if (!LAYERS.some(l => l.kind === 'session')){
+      pushLayer(closeSessionView, 'session');
+      const top = LAYERS[LAYERS.length - 1];
+      if (top && top.kind === 'session') top.y = backY;
+    }
   },
   closeSession(){ if (!closeLayerOf('session')) closeSessionView(); },
   async addSession(){ sessionForm(null); },
